@@ -9,8 +9,8 @@ class OwnCardText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const TextColumn(
-      title: 'Own Many Cards',
-      text: 'Add as many cards to your digital wallet',
+      title: 'Let Your Next Of Kin Know',
+      text: 'Point them to your legacy and assets',
     );
   }
 }

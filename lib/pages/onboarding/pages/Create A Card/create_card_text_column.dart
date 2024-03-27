@@ -10,8 +10,8 @@ class CreateCardText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const TextColumn(
-      title: 'Create A Card',
-      text: 'Create your own card based on your preference',
+      title: 'Create A Dossier',
+      text: 'Create your private vault for all your Confidentials',
     );
   }
 }
