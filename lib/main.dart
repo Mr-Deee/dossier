@@ -1,10 +1,26 @@
+import 'package:dossier/pages/login.dart';
 import 'package:dossier/pages/onboarding/onboarding.dart';
+import 'package:dossier/pages/register.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:provider/provider.dart';
+
+import 'models/clientuser.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+      MultiProvider(providers: [
+        ChangeNotifierProvider<clientusers>(
+          create: (context) => clientusers(),
+        ),
+
+      ],
+
+          child: MyApp()
+      )
+  );
 }
   DatabaseReference Clientsdb = FirebaseDatabase.instance.ref().child("Clients");
 displayToast(String message, BuildContext context) {
@@ -25,8 +41,18 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
 
-      home:  Onboarding(screenHeight: screenHeight,),
-    );
+        initialRoute: FirebaseAuth.instance.currentUser == null
+            ? '/authpage'
+            : '/GasDash',
+        routes: {
+
+          // "/splash": (context) => SplashScreen(),
+          // "/search": (context) => SearchScreen(),
+          "/login": (context) => LoginPage(),
+          "/register": (context) => RegisterPage(),
+          // "/Homepage": (context) =>Homepage(),
+        });
+
   }
 }
 
