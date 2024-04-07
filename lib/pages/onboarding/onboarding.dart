@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:dossier/pages/login.dart';
 import 'package:flutter/material.dart';
 
 import '../../constants.dart';
@@ -171,8 +172,13 @@ class _OnboardingState extends State<Onboarding> with TickerProviderStateMixin {
           _setNextPage(3);
           _setCardsSlideInAnimation();
           await _cardsAnimationController.forward();
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => LoginPage()),
+          );
         }
         break;
+
     }
   }
 
@@ -198,7 +204,9 @@ class _OnboardingState extends State<Onboarding> with TickerProviderStateMixin {
                         child: child!,
                       );
                     },
-                    child: NextPageButton(onPressed: _nextPage),
+                    child: NextPageButton(
+
+                        onPressed: _nextPage),
                   ),
                 ],
               ),
