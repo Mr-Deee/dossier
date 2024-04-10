@@ -14,6 +14,7 @@ class MyApp extends StatelessWidget {
     final screenHeight = MediaQuery.of(context).size.height;
     return MaterialApp(
       title: 'The Dossier.',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
