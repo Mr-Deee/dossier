@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "568450203907",
+    "project_id": "dossier-a8fe7",
+    "storage_bucket": "dossier-a8fe7.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:568450203907:android:24a1400f29de7a7bfba936",
+        "android_client_info": {
+          "package_name": "com.malcolm.dossier"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCgIMq88WSqBOpcmgFZbSgjBe9xUx-7jWk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
