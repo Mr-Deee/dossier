@@ -1,3 +1,4 @@
+import 'package:dossier/pages/homepage.dart';
 import 'package:dossier/pages/login.dart';
 import 'package:dossier/pages/onboarding/onboarding.dart';
 import 'package:dossier/pages/register.dart';
@@ -47,7 +48,7 @@ class MyApp extends StatelessWidget {
       ),
 
         initialRoute: FirebaseAuth.instance.currentUser == null
-            ? '/authpage'
+            ? '/login'
             : '/GasDash',
         routes: {
 
@@ -55,7 +56,7 @@ class MyApp extends StatelessWidget {
           // "/search": (context) => SearchScreen(),
           "/login": (context) => LoginPage(),
           "/register": (context) => RegisterPage(),
-          // "/Homepage": (context) =>Homepage(),
+           "/Homepage": (context) =>homepage(),
         });
 
   }
