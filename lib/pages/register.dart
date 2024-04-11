@@ -1,6 +1,11 @@
+import 'dart:html';
+import 'package:fluttertoast/fluttertoast.dart';
+
 import 'package:email_validator/email_validator.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../main.dart';
 import 'login.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -14,11 +19,17 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   var rememberValue = false;
+  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: Theme
+          .of(context)
+          .colorScheme
+          .background,
       body: Container(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -79,10 +90,11 @@ class _RegisterPageState extends State<RegisterPage> {
                                   color: Colors.white54,
                                   borderRadius: BorderRadius.circular(30)),
                               child: TextFormField(
+                                controller: _usernameController,
                                 validator: (value) =>
-                                    EmailValidator.validate(value!)
-                                        ? null
-                                        : "Please enter a valid email",
+                                EmailValidator.validate(value!)
+                                    ? null
+                                    : "Please enter a valid email",
                                 maxLines: 1,
                                 decoration: InputDecoration(
                                     hintText: 'Username',
@@ -107,13 +119,15 @@ class _RegisterPageState extends State<RegisterPage> {
                                 spreadRadius: 5,
                                 blurRadius: 7,
                                 offset:
-                                    Offset(0, 3), // changes position of shadow
+                                Offset(0, 3), // changes position of shadow
                               ),
                             ],
                             color: Colors.white54,
                             borderRadius: BorderRadius.circular(30)),
                         child: TextFormField(
-                          validator: (value) => EmailValidator.validate(value!)
+                          controller: _emailController,
+                          validator: (value) =>
+                          EmailValidator.validate(value!)
                               ? null
                               : "Please enter a valid email",
                           maxLines: 1,
@@ -137,12 +151,13 @@ class _RegisterPageState extends State<RegisterPage> {
                                 spreadRadius: 5,
                                 blurRadius: 7,
                                 offset:
-                                    Offset(0, 3), // changes position of shadow
+                                Offset(0, 3), // changes position of shadow
                               ),
                             ],
                             color: Colors.white54,
                             borderRadius: BorderRadius.circular(30)),
                         child: TextFormField(
+                          controller: _passwordController,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Please enter your password';
@@ -163,7 +178,10 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     ElevatedButton(
                       onPressed: () {
-                        if (_formKey.currentState!.validate()) {}
+                        if (_formKey.currentState!.validate()) {
+                          registerNewUser(context);
+
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.black54,
@@ -190,7 +208,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
-                                    const LoginPage(title: 'Login UI'),
+                                const LoginPage(title: 'Login UI'),
                               ),
                             );
                           },
@@ -206,5 +224,90 @@ class _RegisterPageState extends State<RegisterPage> {
         ),
       ),
     );
+  }
+
+  User? firebaseUser;
+  User? currentfirebaseUser;
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+
+  Future<void> registerNewUser(BuildContext context) async {
+    showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return Dialog(
+              backgroundColor: Colors.transparent,
+              child: Container(
+                  margin: EdgeInsets.all(15.0),
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20.0)
+                  ),
+                  child: Padding(
+                      padding: EdgeInsets.all(15.0),
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            SizedBox(width: 6.0,),
+                            CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.black),),
+                            SizedBox(width: 26.0,),
+                            Text("Signing up,please wait...")
+
+                          ],
+                        ),
+                      ))));
+        });
+
+
+    firebaseUser = (await _firebaseAuth
+        .createUserWithEmailAndPassword(
+        email: _emailController.text, password: _passwordController.text)
+        .catchError((errMsg) {
+      Navigator.pop(context);
+      displayToast("Error" + errMsg.toString(), context);
+    }))
+        .user;
+
+
+    if (firebaseUser != null) // user created
+
+        {
+      //save use into to database
+
+      Map userDataMap = {
+
+
+        "UserName": _usernameController.text.trim().toString(),
+        "Email": _emailController.text.trim().toString(),
+        "Password": _passwordController.text.trim().toString(),
+
+      };
+      Clientsdb.child(firebaseUser!.uid).set(userDataMap);
+      // admin.child(firebaseUser!.uid).set(userDataMap);
+
+      currentfirebaseUser = firebaseUser;
+      // registerInfirestore(context);
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              LoginPage(),
+        ),
+      );
+    } else {
+      // Navigator.push(
+      //   context,
+      //   MaterialPageRoute(builder: (context) {
+      //     return login();
+      //   }),
+      // );      // Navigator.pop(context);
+      // error occured - display error
+      displayToast("user has not been created", context);
+    }
   }
 }

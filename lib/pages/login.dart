@@ -14,6 +14,9 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   var rememberValue = false;
 
+  final _usernameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -88,6 +91,7 @@ class _LoginPageState extends State<LoginPage> {
                                     ? null
                                     : "Please enter a valid email",
                                 maxLines: 1,
+                                controller: _emailController,
                                 decoration: InputDecoration(
           
                                   hintText: 'Enter your email',
@@ -135,6 +139,7 @@ class _LoginPageState extends State<LoginPage> {
                                 }
                                 return null;
                               },
+                              controller: _passwordController,
                               maxLines: 1,
                               obscureText: true,
                               decoration: InputDecoration(
@@ -221,4 +226,8 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
+
+
+
+
 }

@@ -1,10 +1,15 @@
 import 'package:dossier/pages/onboarding/onboarding.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 void main() {
   runApp(const MyApp());
 }
-
+  DatabaseReference Clientsdb = FirebaseDatabase.instance.ref().child("Clients");
+displayToast(String message, BuildContext context) {
+  Fluttertoast.showToast(msg: message);
+}
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
