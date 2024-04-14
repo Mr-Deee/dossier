@@ -5,6 +5,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
+import '../Assistants/assistantMethods.dart';
+import '../widget/progressdialog.dart';
+
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key,  this.title}) : super(key: key);
   final String ?title;
@@ -276,7 +279,7 @@ class _LoginPageState extends State<LoginPage> {
     try {
       UserCredential userCredential =
       await _firebaseAuth.signInWithEmailAndPassword(
-          email: emailcontroller.text.trim(), password: passwordcontroller.text.trim());
+          email: _emailController.text.trim(), password: _passwordController.text.trim());
 
       if (clients != null) {
         AssistantMethods.getCurrentOnlineUserInfo(context);
