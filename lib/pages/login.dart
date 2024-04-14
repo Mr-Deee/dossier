@@ -1,7 +1,9 @@
 import 'package:dossier/pages/homepage.dart';
 import 'package:dossier/pages/register.dart';
 import 'package:email_validator/email_validator.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key,  this.title}) : super(key: key);
@@ -238,6 +240,62 @@ class _LoginPageState extends State<LoginPage> {
   }
 
 
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
+  void loginAndAuthenticateUser(BuildContext context) async {
+    showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return ProgressDialog(
+            message: "Logging you ,Please wait.",
+          );
+        });
+
+    Future signInWithEmailAndPassword(String email, String password) async {
+      try {
+        UserCredential result = await _firebaseAuth.signInWithEmailAndPassword(
+            email: emailcontroller.text.trim(), password: passwordcontroller.text.trim());
+        User? user = result.user;
+        return _firebaseAuth;
+      } catch (error) {
+        print(error.toString());
+        return null;
+      }
+    }
+
+    final User? firebaseUser = (await _firebaseAuth
+        .signInWithEmailAndPassword(
+        email: emailcontroller.text.trim(),
+        password: passwordcontroller.text.trim())
+        .catchError((errMsg) {
+      Navigator.pop(context);
+      displayToast("Error" + errMsg.toString(), context);
+    }))
+        .user;
+    try {
+      UserCredential userCredential =
+      await _firebaseAuth.signInWithEmailAndPassword(
+          email: emailcontroller.text.trim(), password: passwordcontroller.text.trim());
+
+      if (clients != null) {
+        AssistantMethods.getCurrentOnlineUserInfo(context);
+
+        Navigator.of(context).pushNamed("/Homepage");
+
+        displayToast("Logged-in ", context);
+      } else {
+        displayToast("Error: Cannot be signed in", context);
+      }
+    } catch (e) {
+      // handle error
+    }
+  }
+
+  displayToast(String message, BuildContext context) {
+    Fluttertoast.showToast(msg: message);
+
+
+  }
 
 }
