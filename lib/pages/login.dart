@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 import '../Assistants/assistantMethods.dart';
+import '../main.dart';
 import '../widget/progressdialog.dart';
 
 class LoginPage extends StatefulWidget {
@@ -187,14 +188,14 @@ class _LoginPageState extends State<LoginPage> {
                         ElevatedButton(
                           onPressed: () {
                             if (_formKey.currentState!.validate()) {
-
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      homepage(),
-                                ),
-                              );
+                              loginAndAuthenticateUser(context);
+                              // Navigator.push(
+                              //   context,
+                              //   MaterialPageRoute(
+                              //     builder: (context) =>
+                              //         homepage(),
+                              //   ),
+                              // );
                             }
                           },
                           style: ElevatedButton.styleFrom(
@@ -258,7 +259,7 @@ class _LoginPageState extends State<LoginPage> {
     Future signInWithEmailAndPassword(String email, String password) async {
       try {
         UserCredential result = await _firebaseAuth.signInWithEmailAndPassword(
-            email: emailcontroller.text.trim(), password: passwordcontroller.text.trim());
+            email: _emailController.text.trim(), password: _passwordController.text.trim());
         User? user = result.user;
         return _firebaseAuth;
       } catch (error) {
@@ -269,8 +270,8 @@ class _LoginPageState extends State<LoginPage> {
 
     final User? firebaseUser = (await _firebaseAuth
         .signInWithEmailAndPassword(
-        email: emailcontroller.text.trim(),
-        password: passwordcontroller.text.trim())
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim())
         .catchError((errMsg) {
       Navigator.pop(context);
       displayToast("Error" + errMsg.toString(), context);
@@ -281,7 +282,7 @@ class _LoginPageState extends State<LoginPage> {
       await _firebaseAuth.signInWithEmailAndPassword(
           email: _emailController.text.trim(), password: _passwordController.text.trim());
 
-      if (clients != null) {
+      if (Clientsdb != null) {
         AssistantMethods.getCurrentOnlineUserInfo(context);
 
         Navigator.of(context).pushNamed("/Homepage");

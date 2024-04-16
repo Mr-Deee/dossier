@@ -49,7 +49,7 @@ class MyApp extends StatelessWidget {
 
         initialRoute: FirebaseAuth.instance.currentUser == null
             ? '/login'
-            : '/GasDash',
+            : '/Homepage',
         routes: {
 
           // "/splash": (context) => SplashScreen(),
