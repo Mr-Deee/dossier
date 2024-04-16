@@ -5,6 +5,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:image_picker/image_picker.dart';
 
 class MyCard extends StatelessWidget {
@@ -77,12 +78,7 @@ class MyCard extends StatelessWidget {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Text(
-                    'Popup content',
-                    style: TextStyle(
-                      fontSize: 20,
-                    ),
-                  ),
+                  child: NewVehicle()
                 ),
               ],
             ),
@@ -90,91 +86,78 @@ class MyCard extends StatelessWidget {
         });
   }
 }
-class MyCard2 extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        _showPopup(context);
-      },
-      child: Container(
-        height: 200,
-        width: 150,
-        margin: EdgeInsets.all(10),
-
-        decoration: BoxDecoration(
-          color: Colors.black,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow:  [BoxShadow(
-            color: Colors.grey.withOpacity(0.5),
-            spreadRadius: 5,
-            blurRadius: 7,
-            offset: Offset(0, 3),
-          ),
-        ]),
-        child: Column(
-          children: [
-
-            Expanded(
-              flex: 1,
-              child: Image.asset(Cards.kcard1),
-            ),
-        Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    'Exst -Asset',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold
-                    ),
-                  ),
-                ),
-              ),
-
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showPopup(BuildContext context) {
-    showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return Dialog(
-            backgroundColor: Colors.transparent,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                  child: Container(
-                    color: Colors.black.withOpacity(0.5),
-                  ),
-                ),
-                Container(
-                  padding: EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    'Popup content',
-                    style: TextStyle(
-                      fontSize: 20,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-
-
-        });
-  }
-}
+// class MyCard2 extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     return GestureDetector(
+//       onTap: () {
+//         _showPopup(context);
+//       },
+//       child: Container(
+//         height: 200,
+//         width: 150,
+//         margin: EdgeInsets.all(10),
+//
+//         decoration: BoxDecoration(
+//           color: Colors.black,
+//           borderRadius: BorderRadius.circular(10),
+//           boxShadow:  [BoxShadow(
+//             color: Colors.grey.withOpacity(0.5),
+//             spreadRadius: 5,
+//             blurRadius: 7,
+//             offset: Offset(0, 3),
+//           ),
+//         ]),
+//         child: Column(
+//           children: [
+//
+//             Expanded(
+//               flex: 1,
+//               child: Image.asset(Cards.kcard1),
+//             ),
+//         Center(
+//                 child: Padding(
+//                   padding: const EdgeInsets.all(8.0),
+//                   child: Text(
+//                     'Exst -Asset',
+//                     style: TextStyle(
+//                       color: Colors.white,
+//                       fontSize: 18,
+//                       fontWeight: FontWeight.bold
+//                     ),
+//                   ),
+//                 ),
+//               ),
+//
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+//
+//   void _showPopup(BuildContext context) {
+//     showDialog(
+//         context: context,
+//         builder: (BuildContext context) {
+//           return Dialog(
+//             backgroundColor: Colors.transparent,
+//             child: Stack(
+//               alignment: Alignment.center,
+//               children: [
+//                 BackdropFilter(
+//                   filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+//                   child: Container(
+//                     color: Colors.black.withOpacity(0.5),
+//                   ),
+//                 ),
+//               ],
+//             ),
+//           );
+//
+//
+//         });
+//   }
+// }
 
 class Cards {
   static const String kcard1 = 'assets/images/dd.png';
@@ -211,7 +194,7 @@ class _NewVehicleState extends State<NewVehicle> {
         backgroundColor: Colors.white.withOpacity(0),
         elevation: 0,
         title: Text(
-          'Add Vehicle ',
+          'Add Asset ',
           style: TextStyle(
             fontFamily: 'Bowlby',
             color: Colors.black,
@@ -229,15 +212,18 @@ class _NewVehicleState extends State<NewVehicle> {
               children: <Widget>[
                 // Your existing text fields...
                 // Add image picker button
-                Container(
-                  margin: EdgeInsets.only(top: 10),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _imageSelectorContainer(0),
-                      _imageSelectorContainer(1),
-                      _imageSelectorContainer(2),
-                    ],
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Container(
+                    margin: EdgeInsets.only(top: 10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _imageSelectorContainer(0),
+                        _imageSelectorContainer(1),
+                        _imageSelectorContainer(2),
+                      ],
+                    ),
                   ),
                 ),
 
@@ -249,7 +235,7 @@ class _NewVehicleState extends State<NewVehicle> {
                     keyboardType: TextInputType.name,
                     textInputAction: TextInputAction.next,
                     decoration: InputDecoration(
-                      labelText: 'Model Name',
+                      labelText: 'Asset Name',
                       suffixIcon: Icon(Icons.car_rental_rounded),
                       floatingLabelStyle: TextStyle(
                           color: Colors.blue,
@@ -277,42 +263,42 @@ class _NewVehicleState extends State<NewVehicle> {
                     ),
                   ),
                 ),
-                Container(
-                  margin: EdgeInsets.only(top: 8),
-                  padding: EdgeInsets.all(10),
-                  child: TextField(
-                    controller: vehiclenumber,
-                    keyboardType: TextInputType.text,
-                    textInputAction: TextInputAction.next,
-                    decoration: InputDecoration(
-                      labelText: 'Vehicle Number',
-                      suffixIcon: Icon(Icons.numbers_rounded),
-                      floatingLabelStyle: TextStyle(
-                          color: Colors.blue,
-                          fontSize: 25,
-                          fontWeight: FontWeight.bold),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(17),
-                        ),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide:
-                        (BorderSide(width: 1.0, color: Colors.black)),
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(17),
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide:
-                        (BorderSide(width: 1.0, color: Colors.blue)),
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(17),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                // Container(
+                //   margin: EdgeInsets.only(top: 8),
+                //   padding: EdgeInsets.all(10),
+                //   child: TextField(
+                //     controller: vehiclenumber,
+                //     keyboardType: TextInputType.text,
+                //     textInputAction: TextInputAction.next,
+                //     decoration: InputDecoration(
+                //       labelText: 'Vehicle Number',
+                //       suffixIcon: Icon(Icons.numbers_rounded),
+                //       floatingLabelStyle: TextStyle(
+                //           color: Colors.blue,
+                //           fontSize: 25,
+                //           fontWeight: FontWeight.bold),
+                //       border: OutlineInputBorder(
+                //         borderRadius: BorderRadius.all(
+                //           Radius.circular(17),
+                //         ),
+                //       ),
+                //       enabledBorder: OutlineInputBorder(
+                //         borderSide:
+                //         (BorderSide(width: 1.0, color: Colors.black)),
+                //         borderRadius: BorderRadius.all(
+                //           Radius.circular(17),
+                //         ),
+                //       ),
+                //       focusedBorder: OutlineInputBorder(
+                //         borderSide:
+                //         (BorderSide(width: 1.0, color: Colors.blue)),
+                //         borderRadius: BorderRadius.all(
+                //           Radius.circular(17),
+                //         ),
+                //       ),
+                //     ),
+                //   ),
+                // ),
                 Container(
                   margin: EdgeInsets.only(top: 8),
                   padding: EdgeInsets.all(10),
@@ -431,7 +417,7 @@ class _NewVehicleState extends State<NewVehicle> {
                     textInputAction: TextInputAction.next,
                     decoration: InputDecoration(
                       //labelText: 'Price',
-                      hintText: 'Price/Day',
+                      hintText: 'Worth Of Asset',
                       prefixIcon: Icon(Icons.attach_money),
                       floatingLabelStyle: TextStyle(
                           color: Colors.blue,
