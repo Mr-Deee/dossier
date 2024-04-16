@@ -1,6 +1,10 @@
+import 'dart:ui';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+
+import '../widget/mycards.dart';
 
 class homepage extends StatefulWidget {
   const homepage({super.key});
@@ -12,12 +16,18 @@ class homepage extends StatefulWidget {
 class _homepageState extends State<homepage> {
   @override
   Widget build(BuildContext context) {
-    return  Scaffold(
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("widget"),
+      ),
       body: Container(
         child: Column(
-
+          children: [
+            MyCard(),
+          ],
         ),
       ),
     );
   }
 }
+
