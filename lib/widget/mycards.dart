@@ -21,7 +21,7 @@ class MyCard extends StatelessWidget {
         margin: EdgeInsets.all(10),
 
         decoration: BoxDecoration(
-          color: Colors.black,
+          color: Colors.amber,
           borderRadius: BorderRadius.circular(10),
           boxShadow:  [BoxShadow(
             color: Colors.grey.withOpacity(0.5),
@@ -39,11 +39,11 @@ class MyCard extends StatelessWidget {
             ),
         Center(
                 child: Padding(
-                  padding: const EdgeInsets.all(8.0),
+                  padding: const EdgeInsets.only(top:2.0,bottom: 20),
                   child: Text(
                     'Add An Asset',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: Colors.black38,
                       fontSize: 18,
                       fontWeight: FontWeight.bold
                     ),
@@ -73,6 +73,87 @@ class MyCard extends StatelessWidget {
                   ),
                 ),
                 Container(
+
+                  padding: EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: NewVehicle()
+                ),
+              ],
+            ),
+          );
+        });
+  }
+}
+class ViewAssetsCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        _showPopup(context);
+      },
+      child: Container(
+        height: 200,
+        width: 150,
+        margin: EdgeInsets.all(10),
+
+        decoration: BoxDecoration(
+          color: Colors.black,
+          borderRadius: BorderRadius.circular(10),
+          boxShadow:  [
+            BoxShadow(
+            color: Colors.grey.withOpacity(0.5),
+            spreadRadius: 5,
+            blurRadius: 7,
+            offset: Offset(0, 3),
+          ),
+        ]),
+        child: Column(
+          children: [
+
+            Expanded(
+              flex: 1,
+              child: Image.asset(Cards.kcard2),
+            ),
+        Center(
+                child: Padding(
+                  padding: const EdgeInsets.only(top:2.0,bottom: 20),
+                  child: Text(
+                    'View Assets',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold
+                    ),
+                  ),
+                ),
+              ),
+
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showPopup(BuildContext context) {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return Dialog(
+            backgroundColor: Colors.transparent,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Container(
+                    color: Colors.black.withOpacity(0.5),
+                  ),
+                ),
+                Container(
+
                   padding: EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -161,7 +242,7 @@ class MyCard extends StatelessWidget {
 
 class Cards {
   static const String kcard1 = 'assets/images/dd.png';
-  static const String kcard2 = 'assets/images/dd2.jpg';
+  static const String kcard2 = 'assets/images/assn.png';
   static const String kcard3 = 'assets/images/acc.jpg';
 }
 
@@ -453,7 +534,7 @@ class _NewVehicleState extends State<NewVehicle> {
                     keyboardType: TextInputType.text,
                     textInputAction: TextInputAction.done,
                     decoration: InputDecoration(
-                      labelText: 'Your Location',
+                      labelText: 'Location Of Asset',
                       suffixIcon: Icon(Icons.pin_drop),
                       floatingLabelStyle: TextStyle(
                           color: Colors.blue,
@@ -512,7 +593,7 @@ class _NewVehicleState extends State<NewVehicle> {
                     style: ElevatedButton.styleFrom(
                       enableFeedback: false,
                       elevation: 20,
-                      backgroundColor: Colors.blue,
+                      backgroundColor: Colors.black,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(15),
                       ),

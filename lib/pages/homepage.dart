@@ -18,12 +18,14 @@ class _homepageState extends State<homepage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("widget"),
+        title: Text("Dashboard"),
       ),
       body: Container(
-        child: Column(
+        child: Row(
           children: [
             MyCard(),
+            ViewAssetsCard(),
+
           ],
         ),
       ),
