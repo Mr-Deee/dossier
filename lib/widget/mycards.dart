@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../pages/viewasset.dart';
+
 class MyCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -92,7 +94,13 @@ class ViewAssetsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        _showPopup(context);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                ViewAsset(),
+          ),
+        );
       },
       child: Container(
         height: 180,
