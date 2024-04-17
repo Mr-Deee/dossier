@@ -14,6 +14,22 @@ class homepage extends StatefulWidget {
 }
 
 class _homepageState extends State<homepage> {
+@override
+  void initState() {
+  _getSalutation();
+    // TODO: implement initState
+    super.initState();
+  }
+  String _getSalutation() {
+    var hour = DateTime.now().hour;
+    if (hour < 12) {
+      return 'Good Morning';
+    } else if (hour < 18) {
+      return 'Good Afternoon';
+    } else {
+      return 'Good Evening';
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -37,7 +53,7 @@ class _homepageState extends State<homepage> {
                     children: [
                       Padding(
                         padding: const EdgeInsets.all(2.0),
-                        child: Text('Good Morning',
+                        child: Text('${_getSalutation()}',
                             style:
                                 TextStyle(fontSize: 15, color: Colors.black26)),
                       ),
