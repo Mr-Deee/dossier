@@ -18,18 +18,91 @@ class _homepageState extends State<homepage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Dashboard"),
+        title: Text(
+          "DOSSIER",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
       ),
       body: Container(
-        child: Row(
+        child: Column(
           children: [
-            MyCard(),
-            ViewAssetsCard(),
+            Row(children: [
+              Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 18.0, left: 18),
+                    child: Text('Hi Daniel!', style: TextStyle(fontSize: 25)),
+                  ),
+                  Row(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(2.0),
+                        child: Text('Good Morning',
+                            style:
+                                TextStyle(fontSize: 15, color: Colors.black26)),
+                      ),
+                    ],
+                  )
+                ],
+              ),
+            ]),
+            SizedBox(
+              height: 26,
+            ),
+            Padding(
+              padding: const EdgeInsets.all(18.0),
+              child: Container(
+                height: 120,
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Colors.black, // Set border color to black
+                    width: 4.0, // Set border thickness
+                  ),
+                  borderRadius: BorderRadius.circular(20)
+                ),// Set the background color to black
+                child: Row(
+mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
 
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding:  EdgeInsets.only(top: 18.0, left: 1),
+                              child: Text('Welcome!', style: TextStyle(fontSize: 20)),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 1.0, left: 8),
+                              child: Text('Build Your Dossier!', style: TextStyle(fontSize: 18,color: Colors.black54)),
+                            ),
+
+
+                          ],
+                        ),
+
+                    SizedBox(
+                        height: 34,
+                        child: Image.asset(Cards.kcard2)),
+
+
+                    // Add your children widgets here
+                  ],
+                ),
+                width: MediaQuery.of(context)
+                    .size
+                    .width, // Set the width to match the screen size
+                padding:
+                    EdgeInsets.all(8.0), // Optional: Add padding to the container
+              ),
+            ),
+            Row(children: [
+              MyCard(),
+              ViewAssetsCard(),
+            ]),
           ],
         ),
       ),
     );
   }
 }
-
