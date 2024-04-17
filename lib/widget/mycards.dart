@@ -16,8 +16,8 @@ class MyCard extends StatelessWidget {
         _showPopup(context);
       },
       child: Container(
-        height: 200,
-        width: 150,
+        height: 180,
+        width: 180,
         margin: EdgeInsets.all(10),
 
         decoration: BoxDecoration(
@@ -95,13 +95,13 @@ class ViewAssetsCard extends StatelessWidget {
         _showPopup(context);
       },
       child: Container(
-        height: 200,
-        width: 150,
+        height: 180,
+        width: 180,
         margin: EdgeInsets.all(10),
 
         decoration: BoxDecoration(
-          color: Colors.black,
-          borderRadius: BorderRadius.circular(10),
+          color: Colors.white70,
+          borderRadius: BorderRadius.circular(20),
           boxShadow:  [
             BoxShadow(
             color: Colors.grey.withOpacity(0.5),
@@ -115,7 +115,7 @@ class ViewAssetsCard extends StatelessWidget {
 
             Expanded(
               flex: 1,
-              child: Image.asset(Cards.kcard2),
+              child: Image.asset(Cards.kcard5),
             ),
         Center(
                 child: Padding(
@@ -123,7 +123,7 @@ class ViewAssetsCard extends StatelessWidget {
                   child: Text(
                     'View Assets',
                     style: TextStyle(
-                      color: Colors.white70,
+                      color: Colors.black54,
                       fontSize: 18,
                       fontWeight: FontWeight.bold
                     ),
@@ -243,7 +243,9 @@ class ViewAssetsCard extends StatelessWidget {
 class Cards {
   static const String kcard1 = 'assets/images/dd.png';
   static const String kcard2 = 'assets/images/assn.png';
+  static const String kcard4 = 'assets/images/asset1.png';
   static const String kcard3 = 'assets/images/acc.jpg';
+  static const String kcard5 = 'assets/images/assets2.png';
 }
 
 

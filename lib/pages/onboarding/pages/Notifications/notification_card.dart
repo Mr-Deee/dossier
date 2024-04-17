@@ -12,7 +12,7 @@ class NotificationCard extends StatelessWidget {
       children: [
         Expanded(
           flex: 1,
-          child: Image.asset(Cards.kcard3),
+          child: Image.asset(Cards.kcard4),
         )
       ],
     );
