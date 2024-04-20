@@ -55,7 +55,7 @@ appBar: AppBar( leading: IconButton(
                     children: [
                       Padding(
                         padding: const EdgeInsets.only(left: 12.0),
-                        child: Text('${clientprovider?.username??""}',style: TextStyle(color: Colors.white24,fontSize: 15),),
+                        child: Text('${clientprovider?.username??""}',style: TextStyle(color: Colors.white70,fontSize: 15),),
                       ),
                     ],
                   ),
