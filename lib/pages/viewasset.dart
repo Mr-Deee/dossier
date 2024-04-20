@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../constants.dart';
 
@@ -14,46 +15,65 @@ class _ViewAssetState extends State<ViewAsset> {
   @override
   Widget build(BuildContext context) {
     return  Scaffold(
-
+appBar: AppBar( leading: IconButton(
+  icon: Icon(Icons.arrow_back),
+  onPressed: () {
+    // Navigate back to the previous screen
+    Navigator.of(context).pop();
+  },
+),),
 
       body: Column(
         children: [
-SizedBox(height: 39,),
+      SizedBox(height: 3,),
           Padding(
             padding: const EdgeInsets.all(18.0),
             child: Container(
-              height: 120,
+
+              height: 320,
               decoration: BoxDecoration(
+                  color: Colors.black87,
                   border: Border.all(
-                    color: Colors.black, // Set border color to black
-                    width: 4.0, // Set border thickness
+                   // Set border color to black
+                    width: 0// Set border thickness
                   ),
                   borderRadius: BorderRadius.circular(20)),
               // Set the background color to black
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Column(
+                // mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  SizedBox(height: 104, child: Image.asset(Cards.kcard4)),
+
+                  Row(
                     children: [
                       Padding(
-                        padding: EdgeInsets.only(top: 18.0, left: 1),
-                        child:
-                        Text('Welcome!', style: TextStyle(fontSize: 20)),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 1.0, left: 8),
-                        child: Text('Build Your Dossier!',
-                            style: TextStyle(
-                                fontSize: 18, color: Colors.black54)),
+                        padding: const EdgeInsets.only(left: 12.0),
+                        child: Text("Name",style: TextStyle(color: Colors.white24,fontSize: 15),),
                       ),
                     ],
                   ),
+                  SizedBox(height:102),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(left: 10.0),
+                        child: Text("Daniel",style: TextStyle(color: Colors.white,fontSize: 24),),
+                      ),
+                      Text("|",style: TextStyle(color: Colors.white,fontSize: 24)),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 10.0),
+                        child: Text("Assets",style: TextStyle(color: Colors.white,fontSize: 24),),
+                      ),
+                      Text("|",style: TextStyle(color: Colors.white,fontSize: 24)),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 10.0),
+                        child: Text("Kins",style: TextStyle(color: Colors.white,fontSize: 24),),
+                      ),
 
-                  SizedBox(height: 94, child: Image.asset(Cards.kcard4)),
+                    ],
+                  ),
 
-                  // Add your children widgets here
                 ],
               ),
               width: MediaQuery.of(context).size.width,

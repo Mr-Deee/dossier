@@ -11,6 +11,7 @@ class clientusers extends ChangeNotifier {
   String? id;
   String? email;
   String? firstname;
+  String? username;
   String? lastname;
   String? profilepicture;
   String?phone;
@@ -20,6 +21,7 @@ class clientusers extends ChangeNotifier {
     this.email,
     this.firstname,
     this.lastname,
+    this.username,
     this.profilepicture,
     this.phone,
   });
@@ -28,6 +30,7 @@ class clientusers extends ChangeNotifier {
     return clientusers(
       id:map['id'],
       email : map["email"],
+      username : map["UserName"],
       firstname : map["firstName"],
       lastname: map["lastName"],
       profilepicture: map["Profilepicture"].toString(),

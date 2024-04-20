@@ -3,7 +3,10 @@ import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:provider/provider.dart';
 
+import '../Assistants/assistantMethods.dart';
+import '../models/clientuser.dart';
 import '../widget/mycards.dart';
 
 class homepage extends StatefulWidget {
@@ -19,6 +22,7 @@ class _homepageState extends State<homepage> {
   _getSalutation();
     // TODO: implement initState
     super.initState();
+  AssistantMethods.getCurrentOnlineUserInfo(context);
   }
   String _getSalutation() {
     var hour = DateTime.now().hour;
@@ -32,6 +36,8 @@ class _homepageState extends State<homepage> {
   }
   @override
   Widget build(BuildContext context) {
+    final clientprovider = Provider.of<clientusers>(context).userInfo;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -47,7 +53,7 @@ class _homepageState extends State<homepage> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.only(top: 18.0, left: 18),
-                    child: Text('Hi Daniel!', style: TextStyle(fontSize: 25)),
+                    child: Text('${clientprovider?.username??""}', style: TextStyle(fontSize: 25)),
                   ),
                   Row(
                     children: [
@@ -108,10 +114,15 @@ class _homepageState extends State<homepage> {
                     8.0), // Optional: Add padding to the container
               ),
             ),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              MyCard(),
-              ViewAssetsCard(),
-            ]),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                MyCard(),
+                ViewAssetsCard(),
+              ]),
+            ),
           ],
         ),
       ),
