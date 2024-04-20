@@ -51,6 +51,7 @@ appBar: AppBar( leading: IconButton(
                   SizedBox(height: 104, child: Image.asset(Cards.kcard4)),
 
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Padding(
                         padding: const EdgeInsets.only(left: 12.0),

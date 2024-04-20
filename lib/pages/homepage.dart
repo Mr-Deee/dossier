@@ -53,7 +53,7 @@ class _homepageState extends State<homepage> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.only(top: 18.0, left: 18),
-                    child: Text('${clientprovider?.username??""}', style: TextStyle(fontSize: 25)),
+                    child: Text('Hi '+'${clientprovider?.username??""}!', style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold)),
                   ),
                   Row(
                     children: [
