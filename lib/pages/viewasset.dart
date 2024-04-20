@@ -1,8 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:provider/provider.dart';
 
 import '../constants.dart';
+import '../models/clientuser.dart';
 
 class ViewAsset extends StatefulWidget {
   const ViewAsset({super.key});
@@ -12,8 +14,12 @@ class ViewAsset extends StatefulWidget {
 }
 
 class _ViewAssetState extends State<ViewAsset> {
+
+
   @override
   Widget build(BuildContext context) {
+    final clientprovider = Provider.of<clientusers>(context).userInfo;
+
     return  Scaffold(
 appBar: AppBar( leading: IconButton(
   icon: Icon(Icons.arrow_back),
@@ -48,7 +54,7 @@ appBar: AppBar( leading: IconButton(
                     children: [
                       Padding(
                         padding: const EdgeInsets.only(left: 12.0),
-                        child: Text("Name",style: TextStyle(color: Colors.white24,fontSize: 15),),
+                        child: Text('${clientprovider?.username??""}',style: TextStyle(color: Colors.white24,fontSize: 15),),
                       ),
                     ],
                   ),
