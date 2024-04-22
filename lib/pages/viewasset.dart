@@ -36,7 +36,7 @@ appBar: AppBar( leading: IconButton(
             padding: const EdgeInsets.all(18.0),
             child: Container(
 
-              height: 320,
+              height: 280,
               decoration: BoxDecoration(
                   color: Colors.black87,
                   border: Border.all(
@@ -60,26 +60,26 @@ appBar: AppBar( leading: IconButton(
                     ],
                   ),
                   SizedBox(height:102),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(left: 10.0),
-                        child: Text("Daniel",style: TextStyle(color: Colors.white,fontSize: 24),),
-                      ),
-                      Text("|",style: TextStyle(color: Colors.white,fontSize: 24)),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 10.0),
-                        child: Text("Assets",style: TextStyle(color: Colors.white,fontSize: 24),),
-                      ),
-                      Text("|",style: TextStyle(color: Colors.white,fontSize: 24)),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 10.0),
-                        child: Text("Kins",style: TextStyle(color: Colors.white,fontSize: 24),),
-                      ),
-
-                    ],
-                  ),
+                  // Row(
+                  //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  //   children: [
+                  //     Padding(
+                  //       padding: const EdgeInsets.only(left: 10.0),
+                  //       child: Text("Daniel",style: TextStyle(color: Colors.white,fontSize: 24),),
+                  //     ),
+                  //     Text("|",style: TextStyle(color: Colors.white,fontSize: 24)),
+                  //     Padding(
+                  //       padding: const EdgeInsets.only(left: 10.0),
+                  //       child: Text("Assets",style: TextStyle(color: Colors.white,fontSize: 24),),
+                  //     ),
+                  //     Text("|",style: TextStyle(color: Colors.white,fontSize: 24)),
+                  //     Padding(
+                  //       padding: const EdgeInsets.only(left: 10.0),
+                  //       child: Text("Kins",style: TextStyle(color: Colors.white,fontSize: 24),),
+                  //     ),
+                  //
+                  //   ],
+                  // ),
 
                 ],
               ),
@@ -89,6 +89,23 @@ appBar: AppBar( leading: IconButton(
                   8.0), // Optional: Add padding to the container
             ),
           ),
+
+          Padding(
+            padding: const EdgeInsets.all(18.0),
+            child: Container(
+              height: 100,
+
+              decoration: BoxDecoration(
+                  color: Colors.black87,
+                  border: Border.all(
+                    // Set border color to black
+                      width: 0// Set border thickness
+                  ),
+                  borderRadius: BorderRadius.circular(20)),
+
+              width: MediaQuery.of(context).size.width,
+            ),
+          )
         ],
       ),
     );
