@@ -4,6 +4,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:image_picker/image_picker.dart';
 
 class AddAsset extends StatefulWidget {
@@ -177,41 +178,45 @@ Widget build(BuildContext context) {
                   ),
                 ),
               ),
-              Container(
-                margin: EdgeInsets.only(top: 8),
-                padding: EdgeInsets.all(10),
-                child: TextField(
-                  controller: type,
-                  keyboardType: TextInputType.text,
-                  textInputAction: TextInputAction.next,
-                  decoration: InputDecoration(
-                    labelText: 'AssetType',
-                    suffixIcon: Icon(Icons.select_all_sharp),
-                    floatingLabelStyle: TextStyle(
-                        color: Colors.blue,
-                        fontSize: 25,
-                        fontWeight: FontWeight.bold),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(17),
-                      ),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide:
-                      (BorderSide(width: 1.0, color: Colors.black)),
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(17),
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide:
-                      (BorderSide(width: 1.0, color: Colors.blue)),
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(17),
+              Column(
+                children: [
+                  Container(
+                    margin: EdgeInsets.only(top: 8),
+                    padding: EdgeInsets.all(10),
+                    child: TextField(
+                      controller: type,
+                      keyboardType: TextInputType.text,
+                      textInputAction: TextInputAction.next,
+                      decoration: InputDecoration(
+                        labelText: 'AssetType',
+                        suffixIcon: Icon(Icons.select_all_sharp),
+                        floatingLabelStyle: TextStyle(
+                            color: Colors.blue,
+                            fontSize: 25,
+                            fontWeight: FontWeight.bold),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(17),
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide:
+                          (BorderSide(width: 1.0, color: Colors.black)),
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(17),
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide:
+                          (BorderSide(width: 1.0, color: Colors.blue)),
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(17),
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
+                ],
               ),
               Container(
                 margin: EdgeInsets.only(top: 8),
