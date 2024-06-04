@@ -11,6 +11,8 @@ import 'firebase_options.dart';
 import 'models/clientuser.dart';
 import 'package:firebase_core/firebase_core.dart';
 
+import 'models/myassest.dart';
+
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
@@ -18,9 +20,9 @@ void main() async{
   );
   runApp(
       MultiProvider(providers: [
-        ChangeNotifierProvider<clientusers>(
-          create: (context) => clientusers(),
-        ),
+        ChangeNotifierProvider<clientusers>(create: (context) => clientusers(),),
+        ChangeNotifierProvider<myassets>(create: (context) => myassets(),),
+        // ChangeNotifierProvider<clientusers>(create: (context) => clientusers(),),
 
       ],
 

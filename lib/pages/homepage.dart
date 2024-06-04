@@ -23,6 +23,7 @@ class _homepageState extends State<homepage> {
     // TODO: implement initState
     super.initState();
   AssistantMethods.getCurrentOnlineUserInfo(context);
+  AssistantMethods.getCurrentAssetInfo(context);
   }
   String _getSalutation() {
     var hour = DateTime.now().hour;
