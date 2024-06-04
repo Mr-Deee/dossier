@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../main.dart';
+
 class AddAsset extends StatefulWidget {
   const AddAsset({super.key});
 
@@ -23,7 +25,8 @@ final kinsmanname = TextEditingController();
 final kinsmanmobilenumber = TextEditingController();
 final type = TextEditingController();
 final price = TextEditingController();
-final seat = TextEditingController();
+final Tenure = TextEditingController();
+final assethandler = TextEditingController();
 final location = TextEditingController();
 
 List<File?> _images = [];
@@ -222,13 +225,13 @@ Widget build(BuildContext context) {
                 margin: EdgeInsets.only(top: 8),
                 padding: EdgeInsets.all(10),
                 child: TextField(
-                  controller: seat,
+                  controller: Tenure,
                   keyboardType: TextInputType.numberWithOptions(
                       signed: false, decimal: false),
                   textInputAction: TextInputAction.next,
                   decoration: InputDecoration(
                     labelText: 'Tenure',
-                    suffixIcon: Icon(Icons.chair),
+                    suffixIcon: Icon(Icons.calendar_month),
                     floatingLabelStyle: TextStyle(
                         color: Colors.blue,
                         fontSize: 25,
@@ -296,7 +299,7 @@ Widget build(BuildContext context) {
                 margin: EdgeInsets.only(top: 8),
                 padding: EdgeInsets.all(10),
                 child: TextField(
-                  controller: location,
+                  controller: assethandler,
                   keyboardType: TextInputType.text,
                   textInputAction: TextInputAction.done,
                   decoration: InputDecoration(
@@ -379,9 +382,9 @@ Widget build(BuildContext context) {
                 width: MediaQuery.of(context).size.width * 0.5,
                 height: MediaQuery.of(context).size.height * 0.075,
                 child: ElevatedButton(
-                  onPressed:(){
+                  onPressed:()async{
 
-                    addvehicle();
+                    addVehicle();
                     // addVehicledb();
                   },
                   child: Text(
@@ -475,23 +478,85 @@ void _pickImage(int index) async {
   }
 }
 
-void addvehicle() async {
-  // Upload images to Firebase Storage
-  for (var imageFile in _images) {
-    if (imageFile != null) {
-      final storageRef =
-      FirebaseStorage.instance.ref().child(
-        'vehicle_images/${DateTime
-            .now()
-            .millisecondsSinceEpoch}.jpg',
-      );
-      await storageRef.putFile(imageFile);
-      final downloadURL = await storageRef.getDownloadURL();
-      _imageUrls.add(downloadURL);
+  void addVehicle() async {
+    showLoadingDialog();
+    try {
+      // Upload images to Firebase Storage concurrently
+      List<Future<void>> uploadFutures = _images.map((imageFile) async {
+        if (imageFile != null) {
+          final storageRef = FirebaseStorage.instance.ref().child(
+            'vehicle_images/${DateTime.now().millisecondsSinceEpoch}.jpg',
+          );
+          await storageRef.putFile(imageFile);
+          final downloadURL = await storageRef.getDownloadURL();
+          _imageUrls.add(downloadURL);
+        }
+      }).toList();
+
+      await Future.wait(uploadFutures);
+
+      addVehicledb();
+    } catch (e) {
+      // Handle errors
+      print("Failed to upload images: $e");
+      Navigator.pop(context); // Close the loading dialog
     }
   }
-}
 
-
+  void addVehicledb() {
+    _database.child('vehicles').push().set({
+      'AssetImages': _imageUrls,
+      'AssetName': modelname.text,
+      'KinsMan': kinsmanname.text,
+      'AssetType': type,
+      'Tenure': Tenure.text,
+      'Location Of Assets': location.text,
+      'AssetHandler': assethandler.text,
+      'AssetWorth': double.tryParse(price.text) ?? 0.0,
+      'location': location.text,
+    }).then((_) {
+      Navigator.pop(context); // Close the loading dialog
+      displayToast("Added Successfully", context);
+    }).catchError((error) {
+      // Handle errors
+      print("Failed to add vehicle: $error");
+      Navigator.pop(context); // Close the loading dialog
+    });
+  }
+  void showLoadingDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            margin: EdgeInsets.all(15.0),
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20.0),
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(15.0),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    SizedBox(width: 6.0),
+                    CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+                    ),
+                    SizedBox(width: 26.0),
+                    Text("Adding Asset, please wait..."),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 
 }
