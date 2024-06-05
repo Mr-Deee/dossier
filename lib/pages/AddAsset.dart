@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
@@ -502,13 +503,15 @@ void _pickImage(int index) async {
       Navigator.pop(context); // Close the loading dialog
     }
   }
-
+  // CALL FIREBASE AUTH INSTANCE
+  final userId = FirebaseAuth.instance.currentUser?.uid;
   void addVehicledb() {
-    _database.child('vehicles').push().set({
+    _database.child('Assets').push().set({
       'AssetImages': _imageUrls,
       'AssetName': modelname.text,
+      'CurrentUser':userId,
       'KinsMan': kinsmanname.text,
-      'AssetType': type,
+      'AssetType': type.text,
       'Tenure': Tenure.text,
       'Location Of Assets': location.text,
       'AssetHandler': assethandler.text,
