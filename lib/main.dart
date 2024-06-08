@@ -1,5 +1,6 @@
 import 'package:dossier/pages/homepage.dart';
 import 'package:dossier/pages/login.dart';
+import 'package:dossier/pages/mainscreen.dart';
 import 'package:dossier/pages/onboarding/onboarding.dart';
 import 'package:dossier/pages/register.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -51,11 +52,11 @@ class MyApp extends StatelessWidget {
 
         initialRoute: FirebaseAuth.instance.currentUser == null
             ? '/login'
-            : '/Homepage',
+            : '/main',
         routes: {
 
           // "/splash": (context) => SplashScreen(),
-          // "/search": (context) => SearchScreen(),
+           "/main": (context) => MainScreen(),
           "/login": (context) => LoginPage(),
           "/register": (context) => RegisterPage(),
            "/Homepage": (context) =>homepage(),
