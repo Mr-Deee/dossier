@@ -1,4 +1,6 @@
+import 'package:dossier/pages/About.dart';
 import 'package:dossier/pages/homepage.dart';
+import 'package:dossier/pages/profile.dart';
 import 'package:flutter/material.dart';
 
 class MainScreen extends StatefulWidget {
@@ -7,12 +9,13 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int _selectedIndex = 0;
+  int _selectedIndex = 1;
 
   static List<Widget> _widgetOptions = <Widget>[
-    homepage(),
     // AboutPage(),
-    // ProfilePage(),
+    Profile(),
+    homepage(),
+    About(),
   ];
 
   void _onItemTapped(int index) {
@@ -24,16 +27,18 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
+      body:
+      Center(
         child: _widgetOptions.elementAt(_selectedIndex),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        child: Icon(Icons.add),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+
+
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Home',
@@ -42,15 +47,23 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icon(Icons.info),
             label: 'About',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.amber[800],
         onTap: _onItemTapped,
       ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.amber,
+        onPressed: () {
+          _onItemTapped(1); // Navigate to Home when FAB is pressed
+        },
+        child: Icon(Icons.home),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(50),
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 }
+
