@@ -20,16 +20,13 @@ class TextColumn extends StatelessWidget {
         Text(
           title,
           textAlign: TextAlign.center,
-          style: Theme.of(context)
-              .textTheme
-              .headline5!
-              .copyWith(color: kBlack, fontWeight: FontWeight.bold),
+          // style: Theme.of(context).textTheme.headline5!.copyWith(color: kBlack, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: kSpaceS),
         Text(
           text,
           textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.subtitle1!.copyWith(color: kGrey),
+          // style: Theme.of(context).textTheme.subtitle1!.copyWith(color: kGrey),
         ),
       ],
     );

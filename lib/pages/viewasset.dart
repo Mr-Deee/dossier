@@ -1,8 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
 import '../constants.dart';
@@ -28,121 +26,158 @@ class _ViewAssetState extends State<ViewAsset> {
   User? firebaseUser = FirebaseAuth.instance.currentUser;
 
   void filterAssets() {
-    final clientProvider = Provider.of<clientusers>(context, listen: false).userInfo;
-    final  assetProvider = Provider.of<myassets>(context, listen: false).myassetinfo ;
+    final clientProvider =
+        Provider.of<clientusers>(context, listen: false).userInfo;
+    final assetProvider =
+        Provider.of<myassets>(context, listen: false).myassetinfo;
 
     if (assetProvider != null) {
       filteredAssets = [];
-        if (assetProvider.CurrentUserid == firebaseUser?.uid) {
-          filteredAssets.add(assetProvider);
-        }
-
+      if (assetProvider.CurrentUserid == firebaseUser?.uid) {
+        filteredAssets.add(assetProvider);
+      }
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
     final clientProvider = Provider.of<clientusers>(context).userInfo;
     final assetProvider = Provider.of<myassets>(context).myassetinfo;
-    final DatabaseReference _databaseReference = FirebaseDatabase.instance.ref().child('Assets');
+    final DatabaseReference _databaseReference =
+    FirebaseDatabase.instance.ref().child('Assets');
     return Scaffold(
       appBar: AppBar(
+        title: Text(
+          'Your Assets',
+          style: TextStyle(color: Colors.white, fontSize: 18),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.black87,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            // Navigate back to the previous screen
             Navigator.of(context).pop();
           },
         ),
       ),
       body: Column(
-        children: [ SizedBox(
-          height: 3,
-        ),
+        children: [
+          SizedBox(height: 8),
           Padding(
-            padding: const EdgeInsets.all(18.0),
+            padding: const EdgeInsets.symmetric(horizontal: 18.0),
             child: Container(
-              height: 195,
+              height: 115,
               decoration: BoxDecoration(
                 color: Colors.black87,
-                border: Border.all(),
                 borderRadius: BorderRadius.circular(20),
+                boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 6)],
               ),
-              // Set the background color to black
               child: Column(
-                // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SizedBox(height: 104, child: Image.asset(Cards.kcard4)),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(left: 12.0),
-                        child: Text(
-                          '${clientProvider?.username ?? ""}',
-                          style: TextStyle(color: Colors.white70, fontSize: 15),
-                        ),
-                      ),
-                    ],
+                  SizedBox(height: 74, child: Image.asset(Cards.kcard4)),
+                  Text(
+                    clientProvider?.username ?? "",
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 16,
+                    ),
                   ),
                 ],
               ),
               width: MediaQuery.of(context).size.width,
-              // Set the width to match the screen size
-              padding: EdgeInsets.all(8.0), // Optional: Add padding to the container
             ),
           ),
-Expanded(child:  StreamBuilder(
-              stream: _databaseReference.orderByChild('CurrentUser').equalTo(firebaseUser?.uid).onValue,
-              builder: (BuildContext context, AsyncSnapshot<DatabaseEvent> snapshot) {
+          Expanded(
+            child: StreamBuilder(
+              stream: _databaseReference
+                  .orderByChild('CurrentUser')
+                  .equalTo(firebaseUser?.uid)
+                  .onValue,
+              builder: (BuildContext context,
+                  AsyncSnapshot<DatabaseEvent> snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(
-                    child: CircularProgressIndicator(), // Circular progress indicator
+                    child: CircularProgressIndicator(),
                   );
                 }
-            
+
                 if (snapshot.hasError) {
                   return Center(child: Text('Error: ${snapshot.error}'));
                 }
-            
+
                 List<myassets> filteredAssets = [];
                 if (snapshot.hasData && snapshot.data!.snapshot.value != null) {
-                  Map<dynamic, dynamic>? map = snapshot.data!.snapshot.value as Map<dynamic, dynamic>?;
+                  Map<dynamic, dynamic>? map =
+                  snapshot.data!.snapshot.value as Map<dynamic, dynamic>?;
                   map!.forEach((key, value) {
-                    // Assuming MyAsset is the class representing assets
-                    myassets asset = myassets.fromMap(value.cast<String, dynamic>());
+                    myassets asset =
+                    myassets.fromMap(value.cast<String, dynamic>());
                     filteredAssets.add(asset);
                   });
                 }
-            
+
                 return ListView.builder(
                   itemCount: filteredAssets.length,
                   itemBuilder: (context, index) {
                     final asset = filteredAssets[index];
                     return Padding(
-                      padding: const EdgeInsets.all(18.0),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 10.0, horizontal: 17),
                       child: Container(
-                        height: 100,
+                        height: 110,
                         decoration: BoxDecoration(
-                          color: Colors.black87,
-                          border: Border.all(width: 0),
+                          color: Colors.white,
                           borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.4),
+                              spreadRadius: 1,
+                              blurRadius: 6,
+                              offset: Offset(0, 3),
+                            ),
+                          ],
                         ),
-                        width: MediaQuery.of(context).size.width,
                         child: Padding(
-                          padding: EdgeInsets.all(12.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          padding: const EdgeInsets.all(12.0),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                asset.AssetName ?? '',
-                                style: TextStyle(color: Colors.white70, fontSize: 18),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.network(
+                                  asset.AssetImages ?? '',
+                                  height: 70,
+                                  width: 90,
+                                  fit: BoxFit.cover,
+                                ),
                               ),
-                              Text(
-                                asset.AssetType ?? '',
-                                style: TextStyle(color: Colors.white54, fontSize: 15),
+                              SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment:
+                                  MainAxisAlignment.spaceAround,
+                                  children: [
+                                    Text(
+                                      asset.AssetName ?? '',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      'Worth: ${asset.AssetWorth ?? ''}',
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
+                              Icon(Icons.chevron_right, color: Colors.grey),
                             ],
                           ),
                         ),

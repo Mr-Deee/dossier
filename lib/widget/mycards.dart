@@ -25,7 +25,7 @@ class MyCard extends StatelessWidget {
         );
       },
       child: Container(
-        height: 180,
+        height: 150,
         width: 180,
         margin: EdgeInsets.all(10),
 
@@ -43,7 +43,7 @@ class MyCard extends StatelessWidget {
           children: [
 
             Expanded(
-              flex: 1,
+              flex: 2,
               child: Image.asset(Cards.kcard1),
             ),
         Center(
@@ -80,7 +80,7 @@ class ViewAssetsCard extends StatelessWidget {
         );
       },
       child: Container(
-        height: 180,
+        height: 150,
         width: 180,
         margin: EdgeInsets.all(10),
 
