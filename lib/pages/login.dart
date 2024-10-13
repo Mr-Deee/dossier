@@ -37,7 +37,7 @@ class _LoginPageState extends State<LoginPage> {
             children: <Widget>[
 
               const SizedBox(
-                height: 140,
+                height: 110,
               ),
               const Text(
                 'Dossier',
@@ -47,7 +47,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               const SizedBox(
-                height: 90,
+                height: 20,
               ),
               Container(
           
@@ -285,7 +285,7 @@ class _LoginPageState extends State<LoginPage> {
       if (Clientsdb != null) {
         AssistantMethods.getCurrentOnlineUserInfo(context);
 
-        Navigator.of(context).pushNamed("/Homepage");
+        Navigator.of(context).pushNamed("/main");
 
         displayToast("Logged-in ", context);
       } else {
