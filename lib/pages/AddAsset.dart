@@ -18,6 +18,8 @@ class _AddAssetState extends State<AddAsset> {
   final TextEditingController modelname = TextEditingController();
   final TextEditingController vehiclenumber = TextEditingController();
   final TextEditingController kinsmanname = TextEditingController();
+  final TextEditingController nameofT= TextEditingController();
+  final TextEditingController contactoft= TextEditingController();
   final TextEditingController kinsmanmobilenumber = TextEditingController();
   final TextEditingController type = TextEditingController();
   final TextEditingController price = TextEditingController();
@@ -54,9 +56,11 @@ class _AddAssetState extends State<AddAsset> {
               _buildImagePicker(),
               SizedBox(height: 20),
               _buildTextField(controller: modelname, label: 'Asset Name', icon: Icons.car_rental_rounded),
-              _buildTextField(controller: kinsmanname, label: 'Name of Kinsman', icon: Icons.person),
+              _buildTextField(controller: nameofT, label: 'Trusworthy Person', icon: Icons.security),
+              _buildTextField(controller: contactoft, label: 'Phone Number Trusworthy Person', icon: Icons.security),
               _buildTextField(controller: kinsmanmobilenumber, label: 'Kinsman Mobile Number', icon: Icons.phone),
-              _buildTextField(controller: type, label: 'Asset Type', icon: Icons.category),
+              _buildTextField(controller: kinsmanname, label: 'Name of Kinsman', icon: Icons.person),
+      _buildTextField(controller: type, label: 'Asset Type', icon: Icons.category),
               _buildTextField(controller: tenure, label: 'Tenure (Years)', icon: Icons.calendar_today),
               _buildTextField(controller: price, label: 'Asset Worth', icon: Icons.attach_money, isNumber: true),
               _buildTextField(controller: assethandler, label: 'Asset Handler', icon: Icons.supervisor_account),
@@ -186,11 +190,14 @@ class _AddAssetState extends State<AddAsset> {
   void addVehicledb() {
     final userId = FirebaseAuth.instance.currentUser?.uid;
     _database.child('Assets').push().set({
+      'uid':  userId,
       'AssetImages': _imageUrls,
       'AssetName': modelname.text,
       'CurrentUser': userId,
       'KinsMan': kinsmanname.text,
       'AssetType': type.text,
+      'ContactofTrustworthy': contactoft.text,
+      'NameofTrustworthy': nameofT.text,
       'Tenure': tenure.text,
       'Location': location.text,
       'AssetHandler': assethandler.text,

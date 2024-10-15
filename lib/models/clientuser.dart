@@ -29,7 +29,7 @@ class clientusers extends ChangeNotifier {
   static clientusers fromMap(Map<String, dynamic> map) {
     return clientusers(
       id:map['id'],
-      email : map["email"],
+      email : map["Email"],
       username : map["UserName"],
       firstname : map["firstName"],
       lastname: map["lastName"],

@@ -45,6 +45,7 @@ class _ViewAssetState extends State<ViewAsset> {
     final assetProvider = Provider.of<myassets>(context).myassetinfo;
     final DatabaseReference _databaseReference =
     FirebaseDatabase.instance.ref().child('Assets');
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -72,19 +73,83 @@ class _ViewAssetState extends State<ViewAsset> {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 6)],
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(height: 74, child: Image.asset(Cards.kcard4)),
-                  Text(
-                    clientProvider?.username ?? "",
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 16,
+              child: Padding(
+                padding: const EdgeInsets.all(15.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start, // Aligns text at the top
+                  children: [
+                    // Total Assets section
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Total Assets",
+                            style: TextStyle(color: Colors.white70, fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(height: 5),
+                          Text(
+                            "${filteredAssets.length}",
+                            style: TextStyle(color: Colors.white70, fontSize: 16),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                    // Vertical Divider
+                    Container(
+                      width: 1, // Thickness of the vertical line
+                      height: 40, // Height of the vertical line
+                      color: Colors.white24, // Line color
+                    ),
+                    SizedBox(width: 10), // Add space between sections
+
+                    // Categories section
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Categories",
+                            style: TextStyle(color: Colors.white70, fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(height: 5),
+                          Text(
+                            assetProvider?.AssetType ?? "N/A",
+                            style: TextStyle(color: Colors.white70, fontSize: 16),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Vertical Divider
+                    Container(
+                      width: 1,
+                      height: 40,
+                      color: Colors.white24,
+                    ),
+                    SizedBox(width: 10),
+
+                    // Username section
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Owner",
+                            style: TextStyle(color: Colors.white70, fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(height: 5),
+                          Text(
+                            clientProvider?.username ?? "",
+                            style: TextStyle(color: Colors.white70, fontSize: 16),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
+
               width: MediaQuery.of(context).size.width,
             ),
           ),
@@ -121,64 +186,77 @@ class _ViewAssetState extends State<ViewAsset> {
                   itemCount: filteredAssets.length,
                   itemBuilder: (context, index) {
                     final asset = filteredAssets[index];
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 10.0, horizontal: 17),
-                      child: Container(
-                        height: 110,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.4),
-                              spreadRadius: 1,
-                              blurRadius: 6,
-                              offset: Offset(0, 3),
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AssetDetailsScreen(
+                              asset: asset,
                             ),
-                          ],
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: Image.network(
-                                  asset.AssetImages ?? '',
-                                  height: 70,
-                                  width: 90,
-                                  fit: BoxFit.cover,
-                                ),
+                          ),
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 10.0, horizontal: 17),
+                        child: Container(
+                          height: 110,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.4),
+                                spreadRadius: 1,
+                                blurRadius: 6,
+                                offset: Offset(0, 3),
                               ),
-                              SizedBox(width: 10),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment:
-                                  MainAxisAlignment.spaceAround,
-                                  children: [
-                                    Text(
-                                      asset.AssetName ?? '',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    Text(
-                                      'Worth: ${asset.AssetWorth ?? ''}',
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Icon(Icons.chevron_right, color: Colors.grey),
                             ],
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.network(
+                                    asset.AssetImages ?? '',
+                                    height: 70,
+                                    width: 90,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                    CrossAxisAlignment.start,
+                                    mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                    children: [
+                                      Text(
+                                        asset.AssetName ?? '',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      Text(
+                                        'Worth: ${asset.AssetWorth ?? ''}',
+                                        style: TextStyle(
+                                          color: Colors.grey[600],
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Icon(Icons.chevron_right, color: Colors.grey),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -189,6 +267,46 @@ class _ViewAssetState extends State<ViewAsset> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class AssetDetailsScreen extends StatelessWidget {
+  final myassets asset;
+
+  const AssetDetailsScreen({required this.asset});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(asset.AssetName ?? "Asset Details"),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Image.network(
+              asset.AssetImages ?? '',
+              height: 200,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
+            SizedBox(height: 16),
+            Text(
+              asset.AssetName ?? '',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 8),
+            Text('Worth: ${asset.AssetWorth ?? ''}'),
+            SizedBox(height: 8),
+            Text('Category: ${asset.AssetType ?? 'N/A'}'),
+            SizedBox(height: 8),
+            Text('Description: ${asset.AssetName ?? 'No description available'}'),
+          ],
+        ),
       ),
     );
   }
