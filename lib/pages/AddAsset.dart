@@ -110,9 +110,9 @@ class _AddAssetState extends State<AddAsset> {
     );
   }
 
-  final pickedFile = await picker.pickImage(so
   Future<void> _pickImage(int index) async {
-    final picker = ImagePicker();urce: ImageSource.gallery);
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
         if (_images.length < 3) {
