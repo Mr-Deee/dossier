@@ -80,7 +80,7 @@ int _selectedIndex = 0;
               ),
             ],
           ),
-          SizedBox(height: 26),
+          SizedBox(height: 11),
           Padding(
             padding: const EdgeInsets.all(18.0),
             child: Container(
@@ -100,7 +100,7 @@ int _selectedIndex = 0;
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
-                        padding: EdgeInsets.only(top: 18.0, left: 1),
+                        padding: EdgeInsets.only(top: 18.0, left: 8),
                         child: Text('Welcome!', style: TextStyle(fontSize: 20)),
                       ),
                       Padding(

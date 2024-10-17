@@ -18,8 +18,8 @@ class _AddAssetState extends State<AddAsset> {
   final TextEditingController modelname = TextEditingController();
   final TextEditingController vehiclenumber = TextEditingController();
   final TextEditingController kinsmanname = TextEditingController();
-  final TextEditingController nameofT= TextEditingController();
-  final TextEditingController contactoft= TextEditingController();
+  final TextEditingController nameofT = TextEditingController();
+  final TextEditingController contactoft = TextEditingController();
   final TextEditingController kinsmanmobilenumber = TextEditingController();
   final TextEditingController type = TextEditingController();
   final TextEditingController price = TextEditingController();
@@ -56,11 +56,12 @@ class _AddAssetState extends State<AddAsset> {
               _buildImagePicker(),
               SizedBox(height: 20),
               _buildTextField(controller: modelname, label: 'Asset Name', icon: Icons.car_rental_rounded),
-              _buildTextField(controller: nameofT, label: 'Trusworthy Person', icon: Icons.security),
-              _buildTextField(controller: contactoft, label: 'Phone Number Trusworthy Person', icon: Icons.security),
+              _buildTextField(controller: nameofT, label: 'Trustworthy Person', icon: Icons.security),
+              _buildTextField(controller: contactoft, label: 'Phone Number Trustworthy Person', icon: Icons.security),
               _buildTextField(controller: kinsmanmobilenumber, label: 'Kinsman Mobile Number', icon: Icons.phone),
               _buildTextField(controller: kinsmanname, label: 'Name of Kinsman', icon: Icons.person),
-      _buildTextField(controller: type, label: 'Asset Type', icon: Icons.category),
+              _buildTextField(controller: kinsmanname, label: 'Name of Kinsman', icon: Icons.person),
+              _buildTextField(controller: type, label: 'Asset Type', icon: Icons.category),
               _buildTextField(controller: tenure, label: 'Tenure (Years)', icon: Icons.calendar_today),
               _buildTextField(controller: price, label: 'Asset Worth', icon: Icons.attach_money, isNumber: true),
               _buildTextField(controller: assethandler, label: 'Asset Handler', icon: Icons.supervisor_account),
@@ -167,6 +168,7 @@ class _AddAssetState extends State<AddAsset> {
   void addVehicle() async {
     showLoadingDialog();
     try {
+      // Upload images to Firebase Storage
       List<Future<void>> uploadFutures = _images.map((imageFile) async {
         if (imageFile != null) {
           final storageRef = FirebaseStorage.instance.ref().child(
@@ -178,19 +180,22 @@ class _AddAssetState extends State<AddAsset> {
         }
       }).toList();
 
-      await Future.wait(uploadFutures);
+      await Future.wait(uploadFutures); // Wait for all uploads to complete
 
+      // Now add the vehicle data to the database
       addVehicledb();
     } catch (e) {
       print("Failed to upload images: $e");
-      Navigator.pop(context); // Close loading dialog
+      Navigator.pop(context); // Close loading dialog on error
     }
   }
 
   void addVehicledb() {
     final userId = FirebaseAuth.instance.currentUser?.uid;
+    final email = FirebaseAuth.instance.currentUser?.email;
     _database.child('Assets').push().set({
-      'uid':  userId,
+      'uid': userId,
+      'email': userId,
       'AssetImages': _imageUrls,
       'AssetName': modelname.text,
       'CurrentUser': userId,
@@ -208,7 +213,11 @@ class _AddAssetState extends State<AddAsset> {
         SnackBar(content: Text('Asset Added Successfully')),
       );
     }).catchError((error) {
-      Navigator.pop(context); // Close loading dialog
+      Navigator.pop(context); // Close loading dialog on error
+      print("Failed to add asset: $error");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to add asset. Please try again.')),
+      );
     });
   }
 

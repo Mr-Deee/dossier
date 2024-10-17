@@ -272,42 +272,126 @@ class _ViewAssetState extends State<ViewAsset> {
   }
 }
 
+
+
+
+
 class AssetDetailsScreen extends StatelessWidget {
   final myassets asset;
 
-  const AssetDetailsScreen({required this.asset});
+  const AssetDetailsScreen({Key? key, required this.asset}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(asset.AssetName ?? "Asset Details"),
+        backgroundColor: Colors.blueGrey[900],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () {
+              // Add Edit functionality
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: () {
+              // Add Delete functionality
+            },
+          ),
+        ],
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Image.network(
-              asset.AssetImages ?? '',
-              height: 200,
-              width: double.infinity,
-              fit: BoxFit.cover,
+        child: Card(
+          elevation: 6,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Asset Image with rounded corners and shadow
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16.0),
+                  child: Image.network(
+                    asset.AssetImages ?? 'https://via.placeholder.com/400x200',
+                    height: 200,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Asset Name
+                Text(
+                  asset.AssetName ?? 'Unnamed Asset',
+                  style: const TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Asset Worth with icon
+                Row(
+                  children: [
+                    const Icon(Icons.monetization_on, color: Colors.green, size: 24),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Worth: ${asset.AssetWorth ?? 'N/A'}',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // Asset Category with icon
+                Row(
+                  children: [
+                    const Icon(Icons.category, color: Colors.blueAccent, size: 24),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Category: ${asset.AssetType ?? 'N/A'}',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+
+                const SizedBox(height: 10),
+                // Text(
+                //   asset ?? 'No description available',
+                //   style: const TextStyle(
+                //     fontSize: 16,
+                //     color: Colors.black54,
+                //   ),
+                // ),
+                const SizedBox(height: 24),
+
+                // Action Buttons
+
+              ],
             ),
-            SizedBox(height: 16),
-            Text(
-              asset.AssetName ?? '',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 8),
-            Text('Worth: ${asset.AssetWorth ?? ''}'),
-            SizedBox(height: 8),
-            Text('Category: ${asset.AssetType ?? 'N/A'}'),
-            SizedBox(height: 8),
-            Text('Description: ${asset.AssetName ?? 'No description available'}'),
-          ],
+          ),
         ),
       ),
     );
   }
 }
+
+
+

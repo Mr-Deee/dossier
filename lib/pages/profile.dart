@@ -109,7 +109,7 @@ class _ProfileState extends State<Profile> {
                       children: [
                         Center(
                           child: Text(
-                            userName!,
+                            userName!??"",
                             style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
@@ -123,7 +123,7 @@ class _ProfileState extends State<Profile> {
                       children: [
                         Center(
                           child: Text(
-                            userEmail!,
+                            userEmail!??"",
                             style: const TextStyle(
                               fontSize: 16,
                               color: Colors.grey,
