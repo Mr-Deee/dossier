@@ -2,10 +2,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';  // For formatting date and time
 
 import '../constants.dart';
 import '../models/clientuser.dart';
-import '../models/myassest.dart'; // Assuming you have a model for assets
+import '../models/myassest.dart';
 
 class ViewAsset extends StatefulWidget {
   const ViewAsset({super.key});
@@ -314,7 +316,22 @@ class AssetDetailsScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Asset Image with rounded corners and shadow
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    const Icon(Icons.monetization_on, color: Colors.green, size: 24),
+                    const SizedBox(width: 10),
+                    Text(
+                      '${asset.AssetWorth ?? 'N/A'}',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ],
+                ),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(16.0),
                   child: Image.network(
@@ -324,9 +341,7 @@ class AssetDetailsScreen extends StatelessWidget {
                     fit: BoxFit.cover,
                   ),
                 ),
-                const SizedBox(height: 20),
-
-                // Asset Name
+                const SizedBox(height: 1),
                 Text(
                   asset.AssetName ?? 'Unnamed Asset',
                   style: const TextStyle(
@@ -335,26 +350,7 @@ class AssetDetailsScreen extends StatelessWidget {
                     color: Colors.black87,
                   ),
                 ),
-                const SizedBox(height: 12),
-
-                // Asset Worth with icon
-                Row(
-                  children: [
-                    const Icon(Icons.monetization_on, color: Colors.green, size: 24),
-                    const SizedBox(width: 10),
-                    Text(
-                      'Worth: ${asset.AssetWorth ?? 'N/A'}',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black54,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-
-                // Asset Category with icon
+                const SizedBox(height: 8),
                 Row(
                   children: [
                     const Icon(Icons.category, color: Colors.blueAccent, size: 24),
@@ -369,21 +365,26 @@ class AssetDetailsScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 6),
 
-
-                const SizedBox(height: 10),
-                // Text(
-                //   asset ?? 'No description available',
-                //   style: const TextStyle(
-                //     fontSize: 16,
-                //     color: Colors.black54,
-                //   ),
-                // ),
-                const SizedBox(height: 24),
-
-                // Action Buttons
-
+                // Additional Buttons for Scheduling and Editing Notification
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.notifications, color: Colors.orange),
+                      onPressed: () {
+                        _showScheduleNotificationDialog(context);
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.edit_notifications, color: Colors.blueAccent),
+                      onPressed: () {
+                        _editScheduledNotification(context);
+                      },
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -391,7 +392,151 @@ class AssetDetailsScreen extends StatelessWidget {
       ),
     );
   }
+
+  // Function to show the dialog to schedule a notification
+  void _showScheduleNotificationDialog(BuildContext context) {
+    DateTime? selectedDate;
+    TimeOfDay? selectedTime;
+    String? selectedCriteria;
+    final List<String> criteriaList = ["Urgent", "Reminder", "Follow-up"];
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Schedule Notification'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Date Picker
+                  ListTile(
+                    leading: const Icon(Icons.calendar_today),
+                    title: Text(selectedDate == null
+                        ? 'Select Date'
+                        : DateFormat('yMMMd').format(selectedDate!)),
+                    onTap: () async {
+                      DateTime? pickedDate = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime(2100),
+                      );
+                      if (pickedDate != null) {
+                        setState(() {
+                          selectedDate = pickedDate;
+                        });
+                      }
+                    },
+                  ),
+
+                  // Time Picker
+                  ListTile(
+                    leading: const Icon(Icons.access_time),
+                    title: Text(selectedTime == null
+                        ? 'Select Time'
+                        : selectedTime!.format(context)),
+                    onTap: () async {
+                      TimeOfDay? pickedTime = await showTimePicker(
+                        context: context,
+                        initialTime: TimeOfDay.now(),
+                      );
+                      if (pickedTime != null) {
+                        setState(() {
+                          selectedTime = pickedTime;
+                        });
+                      }
+                    },
+                  ),
+
+                  // Criteria Dropdown
+                  DropdownButtonFormField<String>(
+                    decoration: const InputDecoration(
+                      labelText: "Notification Criteria",
+                      icon: Icon(Icons.filter_list),
+                    ),
+                    items: criteriaList.map((String criteria) {
+                      return DropdownMenuItem<String>(
+                        value: criteria,
+                        child: Text(criteria),
+                      );
+                    }).toList(),
+                    onChanged: (String? value) {
+                      setState(() {
+                        selectedCriteria = value;
+                      });
+                    },
+                    value: selectedCriteria,
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Close the dialog
+                  },
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    // Implement the schedule notification functionality here
+                    if (selectedDate != null && selectedTime != null && selectedCriteria != null) {
+                      // Process the notification schedule
+                    }
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Schedule'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // Function to edit the scheduled notification
+  void _editScheduledNotification(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Edit Scheduled Notification'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Edit the scheduled notification details.'),
+              const SizedBox(height: 16),
+              TextFormField(
+                decoration: const InputDecoration(
+                  labelText: 'Notification Time',
+                  icon: Icon(Icons.schedule),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                // Implement the edit notification functionality
+                Navigator.of(context).pop();
+              },
+              child: const Text('Save Changes'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
+
 
 
 
