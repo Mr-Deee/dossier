@@ -103,6 +103,7 @@ class _AddAssetState extends State<AddAsset> {
           borderRadius: BorderRadius.circular(10),
           child: Image.file(
             _images[index]!,
+
             fit: BoxFit.cover,
           ),
         )

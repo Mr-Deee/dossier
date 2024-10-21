@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';  // For formatting date and time
 import '../constants.dart';
 import '../models/clientuser.dart';
 import '../models/myassest.dart';
+import '../widget/progressdialog.dart';
 
 class ViewAsset extends StatefulWidget {
   const ViewAsset({super.key});
@@ -288,117 +289,134 @@ class AssetDetailsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(asset.AssetName ?? "Asset Details"),
-        backgroundColor: Colors.blueGrey[900],
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () {
-              // Add Edit functionality
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: () {
-              // Add Delete functionality
-            },
-          ),
-        ],
+        backgroundColor: Colors.white,
+        elevation: 0,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
-        child: Card(
-          elevation: 6,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20.0),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    const Icon(Icons.monetization_on, color: Colors.green, size: 24),
-                    const SizedBox(width: 10),
-                    Text(
-                      '${asset.AssetWorth ?? 'N/A'}',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black54,
-                      ),
-                    ),
-                  ],
-                ),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(16.0),
-                  child: Image.network(
-                    asset.AssetImages ?? 'https://via.placeholder.com/400x200',
-                    height: 200,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                const SizedBox(height: 1),
-                Text(
-                  asset.AssetName ?? 'Unnamed Asset',
-                  style: const TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(Icons.category, color: Colors.blueAccent, size: 24),
-                    const SizedBox(width: 10),
-                    Text(
-                      'Category: ${asset.AssetType ?? 'N/A'}',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black54,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
+        child: Column(
 
-                // Additional Buttons for Scheduling and Editing Notification
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Card(
+              elevation: 6,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20.0),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    IconButton(
-                      icon: const Icon(Icons.notifications, color: Colors.orange),
-                      onPressed: () {
-                        _showScheduleNotificationDialog(context);
-                      },
+                    // Asset Worth
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        const Icon(Icons.monetization_on, color: Colors.green, size: 24),
+                        const SizedBox(width: 10),
+                        Text(
+                          '${asset.AssetWorth ?? 'N/A'}',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.black54,
+                          ),
+                        ),
+                      ],
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.edit_notifications, color: Colors.blueAccent),
-                      onPressed: () {
-                        _editScheduledNotification(context);
-                      },
+
+                    // Asset Image
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(16.0),
+                      child: Image.network(
+                        asset.AssetImages ?? 'https://via.placeholder.com/400x200',
+                        height: 200,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
                     ),
+                    const SizedBox(height: 8),
+
+                    // Asset Name
+                    Text(
+                      asset.AssetName ?? 'Unnamed Asset',
+                      style: const TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // Asset Category
+                    Row(
+                      children: [
+                        const Icon(Icons.category, color: Colors.blueAccent, size: 24),
+                        const SizedBox(width: 10),
+                        Text(
+                          'Category: ${asset.AssetType ?? 'N/A'}',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.black54,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Buttons for Scheduling and Editing Notifications
+
                   ],
+                ),
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.notifications, color: Colors.white),
+                  label: const Text(""),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                  ),
+                  onPressed: () {
+                    _showScheduleNotificationDialog(context);
+                  },
+                ),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.edit_notifications, color: Colors.white),
+                  label: const Text(""),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blueAccent,
+                  ),
+                  onPressed: () {
+                    _editScheduledNotification(context);
+                  },
                 ),
               ],
             ),
-          ),
+          ],
         ),
+
+
       ),
     );
   }
 
-  // Function to show the dialog to schedule a notification
+  // Show schedule notification dialog
   void _showScheduleNotificationDialog(BuildContext context) {
     DateTime? selectedDate;
     TimeOfDay? selectedTime;
-    String? selectedCriteria;
-    final List<String> criteriaList = ["Urgent", "Reminder", "Follow-up"];
+    String? selectedProtocol;
+    String? selectedInterval;
+    final clientProvider = Provider.of<clientusers>(context,listen: false).userInfo;
+    final assetProvider = Provider.of<myassets>(context,listen: false).myassetinfo;
+    final List<String> protocolList = ["Email", "Text Message"];
+    final List<String> intervalList = ["Monthly", "Yearly", "Two Years"];
+
+    final DatabaseReference _notificationDatabaseRef = FirebaseDatabase.instance.ref().child('Notifications');
 
     showDialog(
       context: context,
@@ -406,136 +424,194 @@ class AssetDetailsScreen extends StatelessWidget {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: const Text('Schedule Notification'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Date Picker
-                  ListTile(
-                    leading: const Icon(Icons.calendar_today),
-                    title: Text(selectedDate == null
-                        ? 'Select Date'
-                        : DateFormat('yMMMd').format(selectedDate!)),
-                    onTap: () async {
-                      DateTime? pickedDate = await showDatePicker(
-                        context: context,
-                        initialDate: DateTime.now(),
-                        firstDate: DateTime(2020),
-                        lastDate: DateTime(2100),
-                      );
-                      if (pickedDate != null) {
-                        setState(() {
-                          selectedDate = pickedDate;
-                        });
-                      }
-                    },
-                  ),
+              title: const Text(
+                'Schedule Notification',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              content: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Date Picker
+                      ListTile(
+                        leading: const Icon(Icons.calendar_today, color: Colors.blueAccent),
+                        title: Text(
+                          selectedDate == null
+                              ? 'Select Date'
+                              : DateFormat('yMMMd').format(selectedDate!),
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                        onTap: () async {
+                          DateTime? pickedDate = await showDatePicker(
+                            context: context,
+                            initialDate: DateTime.now(),
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime(2100),
+                          );
+                          if (pickedDate != null) {
+                            setState(() {
+                              selectedDate = pickedDate;
+                            });
+                          }
+                        },
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                          side: const BorderSide(color: Colors.grey, width: 1.0),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      ),
 
-                  // Time Picker
-                  ListTile(
-                    leading: const Icon(Icons.access_time),
-                    title: Text(selectedTime == null
-                        ? 'Select Time'
-                        : selectedTime!.format(context)),
-                    onTap: () async {
-                      TimeOfDay? pickedTime = await showTimePicker(
-                        context: context,
-                        initialTime: TimeOfDay.now(),
-                      );
-                      if (pickedTime != null) {
-                        setState(() {
-                          selectedTime = pickedTime;
-                        });
-                      }
-                    },
-                  ),
+                      const SizedBox(height: 10),
 
-                  // Criteria Dropdown
-                  DropdownButtonFormField<String>(
-                    decoration: const InputDecoration(
-                      labelText: "Notification Criteria",
-                      icon: Icon(Icons.filter_list),
-                    ),
-                    items: criteriaList.map((String criteria) {
-                      return DropdownMenuItem<String>(
-                        value: criteria,
-                        child: Text(criteria),
-                      );
-                    }).toList(),
-                    onChanged: (String? value) {
-                      setState(() {
-                        selectedCriteria = value;
-                      });
-                    },
-                    value: selectedCriteria,
+                      // Time Picker
+                      ListTile(
+                        leading: const Icon(Icons.access_time, color: Colors.blueAccent),
+                        title: Text(
+                          selectedTime == null
+                              ? 'Select Time'
+                              : selectedTime!.format(context),
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                        onTap: () async {
+                          TimeOfDay? pickedTime = await showTimePicker(
+                            context: context,
+                            initialTime: TimeOfDay.now(),
+                          );
+                          if (pickedTime != null) {
+                            setState(() {
+                              selectedTime = pickedTime;
+                            });
+                          }
+                        },
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                          side: const BorderSide(color: Colors.grey, width: 1.0),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      // Protocol Dropdown
+                      DropdownButtonFormField<String>(
+                        decoration: const InputDecoration(
+                          labelText: "Protocol",
+                          icon: Icon(Icons.email, color: Colors.blueAccent),
+                          border: OutlineInputBorder(),
+                        ),
+                        value: selectedProtocol,
+                        items: protocolList.map((protocol) {
+                          return DropdownMenuItem<String>(
+                            value: protocol,
+                            child: Text(protocol),
+                          );
+                        }).toList(),
+                        onChanged: (newValue) {
+                          setState(() {
+                            selectedProtocol = newValue;
+                          });
+                        },
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      // Interval Dropdown
+                      DropdownButtonFormField<String>(
+                        decoration: const InputDecoration(
+                          labelText: "Interval",
+                          icon: Icon(Icons.schedule, color: Colors.blueAccent),
+                          border: OutlineInputBorder(),
+                        ),
+                        value: selectedInterval,
+                        items: intervalList.map((interval) {
+                          return DropdownMenuItem<String>(
+                            value: interval,
+                            child: Text(interval),
+                          );
+                        }).toList(),
+                        onChanged: (newValue) {
+                          setState(() {
+                            selectedInterval = newValue;
+                          });
+                        },
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
               actions: [
                 TextButton(
                   onPressed: () {
-                    Navigator.of(context).pop(); // Close the dialog
+                    Navigator.pop(context);
                   },
-                  child: const Text('Cancel'),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(color: Colors.redAccent),
+                  ),
                 ),
-                TextButton(
-                  onPressed: () {
-                    // Implement the schedule notification functionality here
-                    if (selectedDate != null && selectedTime != null && selectedCriteria != null) {
-                      // Process the notification schedule
+                ElevatedButton(
+                  onPressed: () async {
+                    if (selectedDate != null &&
+                        selectedTime != null &&
+                        selectedProtocol != null &&
+                        selectedInterval != null) {
+                      String formattedDate = DateFormat('yMMMd').format(selectedDate!);
+                      String formattedTime = selectedTime!.format(context);
+
+                      // Generate a document ID for the notification
+                      String notificationId = _notificationDatabaseRef.push().key!;
+
+                      // Save the notification details to the Firebase database
+                      await _notificationDatabaseRef.child(notificationId).set({
+                        'assetId': assetProvider?.id,
+                        'protocol': selectedProtocol,
+                        'interval': selectedInterval,
+                        'scheduledDate': formattedDate,
+                        'scheduledTime': formattedTime,
+                        'documentId': notificationId, // Save the document ID here
+                      });
+
+                      // Optionally, show a success message
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Notification scheduled successfully"),
+                        ),
+                      );
+
+                      Navigator.pop(context);
+                    } else {
+                      // Show an error if the user hasn't completed the form
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Please fill out all fields"),
+                        ),
+                      );
                     }
-                    Navigator.of(context).pop();
                   },
                   child: const Text('Schedule'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blueAccent,
+                  ),
                 ),
               ],
             );
+
           },
         );
       },
     );
   }
-
   // Function to edit the scheduled notification
   void _editScheduledNotification(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Edit Scheduled Notification'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Edit the scheduled notification details.'),
-              const SizedBox(height: 16),
-              TextFormField(
-                decoration: const InputDecoration(
-                  labelText: 'Notification Time',
-                  icon: Icon(Icons.schedule),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-              },
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                // Implement the edit notification functionality
-                Navigator.of(context).pop();
-              },
-              child: const Text('Save Changes'),
-            ),
-          ],
-        );
-      },
-    );
+    // This function can contain your logic to edit an existing scheduled notification.
   }
 }
+
 
 
 
