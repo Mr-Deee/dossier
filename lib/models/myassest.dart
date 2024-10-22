@@ -28,9 +28,9 @@ class myassets extends ChangeNotifier {
     this.AssetImages,
   });
 
-  static myassets fromMap(Map<String, dynamic> map) {
+  static myassets fromMap(Map<String, dynamic> map, String id) {
     return myassets(
-      id: map['id'],
+      id:id,
       CurrentUserid: map['CurrentUser'],
       AssetName: map['AssetName'],
       location: map["location"],

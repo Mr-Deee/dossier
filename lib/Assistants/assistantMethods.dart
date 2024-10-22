@@ -76,11 +76,12 @@ class AssistantMethods {
         Map<String, dynamic> assetsData = Map<String, dynamic>.from(dataSnapshot.value as dynamic);
 
         // Iterate through the assets and update the context
-        for (var asset in assetsData.values) {
-          myassets currentUserAssets = myassets.fromMap(Map<String, dynamic>.from(asset));
+        assetsData.forEach((key, value) {
+          myassets currentUserAssets = myassets.fromMap(Map<String, dynamic>.from(value),key);
           context.read<myassets>().setASSUser(currentUserAssets);
           print('assistant methods step 78:: assign users data to AssetuserCurrentInfo object');
-        }
+
+      });
       } else {
         print("No asset data found for the current user.");
       }

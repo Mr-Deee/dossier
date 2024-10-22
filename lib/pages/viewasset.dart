@@ -576,7 +576,7 @@ class AssetDetailsScreen extends StatelessWidget {
                         'interval': selectedInterval,
                         'scheduledDate': formattedDate,
                         'scheduledTime': formattedTime,
-                        'documentId': notificationId, // Save the document ID here
+                        'NotificationID': notificationId, // Save the document ID here
                       });
 
                       // Optionally, show a success message
