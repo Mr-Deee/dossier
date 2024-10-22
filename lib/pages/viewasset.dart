@@ -115,6 +115,7 @@ class _ViewAssetState extends State<ViewAsset> {
                           Text(
                             "Categories",
                             style: TextStyle(color: Colors.white70, fontSize: 18, fontWeight: FontWeight.bold),
+
                           ),
                           SizedBox(height: 5),
                           Text(
@@ -180,7 +181,7 @@ class _ViewAssetState extends State<ViewAsset> {
                   snapshot.data!.snapshot.value as Map<dynamic, dynamic>?;
                   map!.forEach((key, value) {
                     myassets asset =
-                    myassets.fromMap(value.cast<String, dynamic>());
+                    myassets.fromMap(value.cast<String, dynamic>(),key);
                     filteredAssets.add(asset);
                   });
                 }
@@ -382,6 +383,8 @@ class AssetDetailsScreen extends StatelessWidget {
                     backgroundColor: Colors.orange,
                   ),
                   onPressed: () {
+                  String?  docid=asset.id;
+                    print('document$docid');
                     _showScheduleNotificationDialog(context);
                   },
                 ),
