@@ -384,7 +384,7 @@ class AssetDetailsScreen extends StatelessWidget {
                   ),
                   onPressed: () {
                   String?  docid=asset.id;
-                    print('document$docid');
+                    // print('document$docid');
                     _showScheduleNotificationDialog(context);
                   },
                 ),
@@ -581,10 +581,30 @@ class AssetDetailsScreen extends StatelessWidget {
 
                       // Optionally, show a success message
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Notification scheduled successfully"),
+                        SnackBar(
+                          content: const Text(
+                            "Notification scheduled successfully",
+                            style: TextStyle(
+                              color: Colors.black, // Text color
+                              fontWeight: FontWeight.bold, // Bold text
+                            ),
+                          ),
+                          backgroundColor: Colors.white, // Background color
+                          behavior: SnackBarBehavior.floating, // Makes the snackbar float above the bottom of the screen
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10), // Rounded corners
+                          ),
+                          duration: const Duration(seconds: 2), // Duration the snack bar is shown
+                          action: SnackBarAction(
+                            label: "Undo",
+                            textColor: Colors.yellow, // Button text color
+                            onPressed: () {
+                              // Your undo action code here
+                            },
+                          ),
                         ),
                       );
+
 
                       Navigator.pop(context);
                     } else {

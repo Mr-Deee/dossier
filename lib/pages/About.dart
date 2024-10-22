@@ -26,8 +26,8 @@ class _AboutState extends State<About> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('About Dossier'),
-        backgroundColor: Colors.black,
+        // title: const Text('About Dossier',style: TextStyle(color: Colors.white),),
+        backgroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
         child: AnimatedOpacity(
@@ -46,37 +46,9 @@ class _AboutState extends State<About> {
                 //     fit: BoxFit.cover,
                 //   ),
                 // ),
-                const SizedBox(height: 20),
 
-                // Title Card
-                // Card(
-                //   color: Colors.black,
-                //   elevation: 5,
-                //   shape: RoundedRectangleBorder(
-                //     borderRadius: BorderRadius.circular(10),
-                //   ),
-                //   child: Padding(
-                //     padding: const EdgeInsets.all(16.0),
-                //     child: Column(
-                //       children: [
-                //         const Text(
-                //           'Welcome to Dossier',
-                //           style: TextStyle(
-                //             fontSize: 28,
-                //             fontWeight: FontWeight.bold,
-                //             color: Colors.white,
-                //           ),
-                //         ),
-                //         const SizedBox(height: 10),
-                //         const Text(
-                //           'Your secure and reliable digital will platform. Dossier helps you protect your legacy by managing your digital assets, adding next of kin, and providing clear instructions for your loved ones.',
-                //           style: TextStyle(fontSize: 16, height: 1.5, color: Colors.white),
-                //           textAlign: TextAlign.center,
-                //         ),
-                //       ],
-                //     ),
-                //   ),
-                // ),
+
+
                 const SizedBox(height: 20),
 
                 // Key Features Card

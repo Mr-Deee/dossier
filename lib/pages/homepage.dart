@@ -174,8 +174,9 @@ int _selectedIndex = 0;
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "DOSSIER",
-          style: TextStyle(fontWeight: FontWeight.bold),
+          "DOSSIER.",
+          style: TextStyle(
+              fontWeight: FontWeight.bold),
         ),
       ),
       body: Container(
