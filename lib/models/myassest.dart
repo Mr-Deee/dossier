@@ -15,6 +15,7 @@ class myassets extends ChangeNotifier {
   String? location;
   String? Tenure;
   String? AssetImages;
+  String? notifications ;
 
   myassets({
     this.id,
@@ -26,6 +27,7 @@ class myassets extends ChangeNotifier {
     this.location,
     this.Tenure,
     this.AssetImages,
+    this.notifications
   });
 
   static myassets fromMap(Map<String, dynamic> map, String id) {
@@ -39,6 +41,7 @@ class myassets extends ChangeNotifier {
       Tenure: map["Tenure"],
       AssetImages: map["AssetImages"][0].toString(),
       KinsMan: map["KinsMan"],
+      notifications: map["Notification"],
     );
   }
 
