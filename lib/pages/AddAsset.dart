@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
-
 import 'package:provider/provider.dart'; // Ensure you have provider set up
 
 // Dummy Providers for demonstration. Replace with your actual providers.
@@ -38,6 +37,9 @@ class _AddAssetState extends State<AddAsset> {
   final TextEditingController tenure = TextEditingController();
   final TextEditingController assethandler = TextEditingController();
   final TextEditingController location = TextEditingController();
+  final TextEditingController passwordController = TextEditingController(); // Password Controller
+  String? selectedAssetType;
+  List<String> assetTypes = ['Car', 'House', 'Land', 'Equipment'];
 
   List<File?> _images = [];
   List<String> _imageUrls = [];
@@ -64,9 +66,6 @@ class _AddAssetState extends State<AddAsset> {
         centerTitle: true,
         title: Text(
           'New Asset',
-          // style:GoogleFonts.cormorantInfant(
-          //   fontWeight: FontWeight.bold
-          // ),
           style: TextStyle(
             color: Colors.black,
             fontSize: 22,
@@ -80,7 +79,7 @@ class _AddAssetState extends State<AddAsset> {
         currentStep: _currentStep,
         onStepContinue: _nextStep,
         onStepCancel: _prevStep,
-        type: StepperType.horizontal,
+        type: StepperType.vertical,
         controlsBuilder: (BuildContext context, ControlsDetails details) {
           return Row(
             children: <Widget>[
@@ -95,7 +94,10 @@ class _AddAssetState extends State<AddAsset> {
               SizedBox(width: 10),
               ElevatedButton(
                 onPressed: details.onStepContinue,
-                child: Text(_currentStep == 2 ? 'Submit' : 'Next',style:TextStyle(color: Colors.white),),
+                child: Text(
+                  _currentStep == 3 ? 'Submit' : 'Next',
+                  style: TextStyle(color: Colors.white),
+                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,
                 ),
@@ -108,25 +110,25 @@ class _AddAssetState extends State<AddAsset> {
             title: Text('Images'),
             content: _buildImagePicker(),
             isActive: _currentStep >= 0,
-            state: _currentStep > 0
-                ? StepState.complete
-                : StepState.indexed,
+            state: _currentStep > 0 ? StepState.complete : StepState.indexed,
           ),
           Step(
             title: Text('Details'),
             content: _buildDetailsForm(),
             isActive: _currentStep >= 1,
-            state: _currentStep > 1
-                ? StepState.complete
-                : StepState.indexed,
+            state: _currentStep > 1 ? StepState.complete : StepState.indexed,
           ),
           Step(
             title: Text('Notification'),
             content: _buildNotificationForm(),
             isActive: _currentStep >= 2,
-            state: _currentStep > 2
-                ? StepState.complete
-                : StepState.indexed,
+            state: _currentStep > 2 ? StepState.complete : StepState.indexed,
+          ),
+          Step(
+            title: Text('Password'),
+            content: _buildPasswordForm(), // New step for password
+            isActive: _currentStep >= 3,
+            state: _currentStep > 3 ? StepState.complete : StepState.indexed,
           ),
         ],
       ),
@@ -137,9 +139,7 @@ class _AddAssetState extends State<AddAsset> {
     if (_currentStep == 0) {
       // Validate Image Selection
       if (_images.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Please select at least one image')),
-        );
+        _showCustomSnackBar('Please select at least one image');
         return;
       }
     } else if (_currentStep == 1) {
@@ -154,18 +154,30 @@ class _AddAssetState extends State<AddAsset> {
           price.text.isEmpty ||
           assethandler.text.isEmpty ||
           location.text.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Please fill out all fields')),
-        );
+        _showCustomSnackBar('Please fill out all fields');
         return;
       }
     } else if (_currentStep == 2) {
+      // Validate Notification Fields
+      if (selectedDate == null ||
+          selectedTime == null ||
+          selectedProtocol == null ||
+          selectedInterval == null) {
+        _showCustomSnackBar('Please complete the notification schedule');
+        return;
+      }
+    } else if (_currentStep == 3) {
+      // Validate Password
+      if (passwordController.text.isEmpty) {
+        _showCustomSnackBar('Please enter your password');
+        return;
+      }
       // Submit the form
       addAsset();
       return;
     }
 
-    if (_currentStep < 2) {
+    if (_currentStep < 3) {
       setState(() {
         _currentStep += 1;
       });
@@ -178,6 +190,23 @@ class _AddAssetState extends State<AddAsset> {
         _currentStep -= 1;
       });
     }
+  }
+
+  void _showCustomSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: TextStyle(color: Colors.black),
+        ),
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.0),
+        ),
+        behavior: SnackBarBehavior.floating,
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
 
   Widget _buildImagePicker() {
@@ -243,16 +272,38 @@ class _AddAssetState extends State<AddAsset> {
     return Column(
       children: [
         _buildTextField(controller: modelname, label: 'Asset Name', icon: Icons.car_rental_rounded),
+        SizedBox(height: 12),
+
         _buildTextField(controller: nameofT, label: 'Trustworthy Person', icon: Icons.security),
+        SizedBox(height: 12),
         _buildTextField(controller: contactoft, label: 'Phone Number Trustworthy Person', icon: Icons.phone, isNumber: true),
+        SizedBox(height: 12),
         _buildTextField(controller: kinsmanmobilenumber, label: 'Kinsman Mobile Number', icon: Icons.phone, isNumber: true),
+        SizedBox(height: 12),
         _buildTextField(controller: kinsmanname, label: 'Name of Kinsman', icon: Icons.person),
-        _buildTextField(controller: type, label: 'Asset Type', icon: Icons.category),
-        _buildTextField(controller: tenure, label: 'Tenure (Years)', icon: Icons.calendar_today, isNumber: true),
-        _buildTextField(controller: price, label: 'Asset Worth', icon: Icons.attach_money, isNumber: true),
-        _buildTextField(controller: assethandler, label: 'Asset Handler', icon: Icons.supervisor_account),
-        _buildTextField(controller: location, label: 'Location of Asset', icon: Icons.pin_drop),
+        SizedBox(height: 12),
+        _buildDropdownField(), // Replaced text field with a dropdown menu
+        SizedBox(height: 12),
+        _buildTextField(controller: tenure, label: 'Tenure', icon: Icons.access_time),
+        SizedBox(height: 12),
+        _buildTextField(controller: price, label: 'Asset Price', icon: Icons.attach_money, isNumber: true),
+        SizedBox(height: 12),
+        _buildTextField(controller: assethandler, label: 'Asset Handler', icon: Icons.person_add),
+        SizedBox(height: 12),
+        _buildTextField(controller: location, label: 'Location', icon: Icons.location_on),
       ],
+    );
+  }
+
+  Widget _buildTextField({required TextEditingController controller, required String label, required IconData icon, bool isNumber = false}) {
+    return TextField(
+      controller: controller,
+      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: Colors.black),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+      ),
     );
   }
 
@@ -260,127 +311,111 @@ class _AddAssetState extends State<AddAsset> {
     return Column(
       children: [
         ListTile(
-          leading: Icon(Icons.calendar_today, color: Colors.blueAccent),
-          title: Text(
-            selectedDate == null
-                ? 'Select Date'
-                : DateFormat('yMMMd').format(selectedDate!),
-            style: TextStyle(fontSize: 16),
+          title: Text('Select Notification Protocol'),
+          trailing: DropdownButton(
+            value: selectedProtocol, // Set the current value
+            items: protocolList.map((protocol) {
+              return DropdownMenuItem(
+                child: Text(protocol),
+                value: protocol,
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                selectedProtocol = value; // Update the selected value
+              });
+            },
+            hint: Text('Select Protocol'),
           ),
-          onTap: _pickDate,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8.0),
-            side: BorderSide(color: Colors.grey, width: 1.0),
-          ),
-          contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         ),
-        SizedBox(height: 10),
         ListTile(
-          leading: Icon(Icons.access_time, color: Colors.blueAccent),
-          title: Text(
-            selectedTime == null
-                ? 'Select Time'
-                : selectedTime!.format(context),
-            style: TextStyle(fontSize: 16),
+          title: Text('Select Notification Interval'),
+          trailing: DropdownButton(
+            value: selectedInterval, // Set the current value
+            items: intervalList.map((interval) {
+              return DropdownMenuItem(
+                child: Text(interval),
+                value: interval,
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                selectedInterval = value; // Update the selected value
+              });
+            },
+            hint: Text('Select Interval'),
           ),
-          onTap: _pickTime,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8.0),
-            side: BorderSide(color: Colors.grey, width: 1.0),
-          ),
-          contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         ),
-        SizedBox(height: 10),
-        DropdownButtonFormField<String>(
-          decoration: InputDecoration(
-            labelText: "Protocol",
-            icon: Icon(Icons.email, color: Colors.blueAccent),
-            border: OutlineInputBorder(),
+        ListTile(
+          title: Text('Select Date'),
+          trailing: TextButton(
+            onPressed: () async {
+              final date = await showDatePicker(
+                context: context,
+                initialDate: selectedDate ?? DateTime.now(),
+                firstDate: DateTime(2000),
+                lastDate: DateTime(2101),
+              );
+              setState(() {
+                selectedDate = date;
+              });
+            },
+            child: Text(selectedDate != null ? DateFormat('yyyy-MM-dd').format(selectedDate!) : 'Choose Date'),
           ),
-          value: selectedProtocol,
-          items: protocolList.map((protocol) {
-            return DropdownMenuItem<String>(
-              value: protocol,
-              child: Text(protocol),
-            );
-          }).toList(),
-          onChanged: (newValue) {
-            setState(() {
-              selectedProtocol = newValue;
-            });
-          },
         ),
-        SizedBox(height: 10),
-        DropdownButtonFormField<String>(
-          decoration: InputDecoration(
-            labelText: "Interval",
-            icon: Icon(Icons.schedule, color: Colors.blueAccent),
-            border: OutlineInputBorder(),
+        ListTile(
+          title: Text('Select Time'),
+          trailing: TextButton(
+            onPressed: () async {
+              final time = await showTimePicker(
+                context: context,
+                initialTime: selectedTime ?? TimeOfDay.now(),
+              );
+              setState(() {
+                selectedTime = time;
+              });
+            },
+            child: Text(selectedTime != null ? selectedTime!.format(context) : 'Choose Time'),
           ),
-          value: selectedInterval,
-          items: intervalList.map((interval) {
-            return DropdownMenuItem<String>(
-              value: interval,
-              child: Text(interval),
-            );
-          }).toList(),
-          onChanged: (newValue) {
-            setState(() {
-              selectedInterval = newValue;
-            });
-          },
         ),
       ],
     );
   }
 
-  Future<void> _pickDate() async {
-    DateTime initialDate = DateTime.now().add(Duration(days: 1));
-    DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: initialDate,
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2100),
+  Widget _buildDropdownField() {
+    return DropdownButtonFormField<String>(
+      decoration: InputDecoration(
+        labelText: 'Asset Type',
+        prefixIcon: Icon(Icons.category),
+        border: OutlineInputBorder(),
+      ),
+      value: selectedAssetType,
+      items: assetTypes.map((String assetType) {
+        return DropdownMenuItem<String>(
+          value: assetType,
+          child: Text(assetType),
+        );
+      }).toList(),
+      onChanged: (newValue) {
+        setState(() {
+          selectedAssetType = newValue;
+        });
+      },
+      validator: (value) => value == null ? 'Please select an asset type' : null,
     );
-    if (pickedDate != null) {
-      setState(() {
-        selectedDate = pickedDate;
-      });
-    }
   }
 
-  Future<void> _pickTime() async {
-    TimeOfDay initialTime = TimeOfDay.now();
-    TimeOfDay? pickedTime =
-    await showTimePicker(context: context, initialTime: initialTime);
-    if (pickedTime != null) {
-      setState(() {
-        selectedTime = pickedTime;
-      });
-    }
-  }
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    bool isNumber = false,
-  }) {
-    return Container(
-      margin: EdgeInsets.only(top: 16),
-      child: TextField(
-        controller: controller,
-        keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: Icon(icon, color: Colors.grey[600]),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-            borderSide: BorderSide.none,
-          ),
-        ),
+
+
+  Widget _buildPasswordForm() {
+    return TextField(
+      controller: passwordController,
+      obscureText: true,
+      decoration: InputDecoration(
+        labelText: 'Enter Password',
+        prefixIcon: Icon(Icons.lock, color: Colors.black),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
@@ -458,69 +493,43 @@ class _AddAssetState extends State<AddAsset> {
         _isLoading = false;
       });
 
-      // Show Success Snackbar with Custom Styling
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text(
-            "Asset Added and Notification Scheduled Successfully",
-            style: TextStyle(
-              color: Colors.white, // Text color
-              fontWeight: FontWeight.bold, // Bold text
-            ),
-          ),
-          backgroundColor: Colors.green, // Background color
-          behavior: SnackBarBehavior.floating, // Makes the snackbar float
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10), // Rounded corners
-          ),
-          duration: const Duration(seconds: 3), // Duration the snackbar is shown
-          action: SnackBarAction(
-            label: "Undo",
-            textColor: Colors.yellow, // Button text color
-            onPressed: () {
-              // Your undo action code here
-              // For example, you might want to delete the recently added asset
-            },
-          ),
-        ),
-      );
 
-      // Reset the form
-      _resetForm();
-    } catch (e) {
-      print("Failed to add asset: $e");
+
+      _showCustomSnackBar('Asset added successfully!');
+      // Clear the fields
+      _clearFields();
+    } catch (error) {
+      // print(error);
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(content: Text('Failed to add asset: $error')),
+      // );
+    } finally {
       setState(() {
         _isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to add asset. Please try again.'),
-          backgroundColor: Colors.red,
-        ),
-      );
     }
   }
 
-  void _resetForm() {
-    setState(() {
-      _currentStep = 0;
-      _images = [];
-      _imageUrls = [];
-      modelname.clear();
-      vehiclenumber.clear();
-      kinsmanname.clear();
-      nameofT.clear();
-      contactoft.clear();
-      kinsmanmobilenumber.clear();
-      type.clear();
-      price.clear();
-      tenure.clear();
-      assethandler.clear();
-      location.clear();
-      selectedDate = null;
-      selectedTime = null;
-      selectedProtocol = null;
-      selectedInterval = null;
-    });
-  }
+void _clearFields() {
+  modelname.clear();
+  vehiclenumber.clear();
+  kinsmanname.clear();
+  nameofT.clear();
+  contactoft.clear();
+  kinsmanmobilenumber.clear();
+  type.clear();
+  price.clear();
+  tenure.clear();
+  assethandler.clear();
+  location.clear();
+  passwordController.clear();
+  _images.clear();
+  _imageUrls.clear();
+  selectedDate = null;
+  selectedTime = null;
+  selectedProtocol = null;
+  selectedInterval = null;
+  _currentStep = 0;
+}
+
 }
