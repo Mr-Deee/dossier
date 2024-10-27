@@ -41,7 +41,7 @@ class myassets extends ChangeNotifier {
       Tenure: map["Tenure"],
       AssetImages: map["AssetImages"][0].toString(),
       KinsMan: map["KinsMan"],
-      notifications: map["Notification"],
+      notifications: map["Notification"].toString(),
     );
   }
 

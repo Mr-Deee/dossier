@@ -19,28 +19,72 @@ class ViewAsset extends StatefulWidget {
 
 class _ViewAssetState extends State<ViewAsset> {
   List<myassets> filteredAssets = [];
+  List<myassets> allAssets = []; // Assuming you have a list of assets
 
+  int totalAssets = 0;
   @override
   void initState() {
     super.initState();
-    filterAssets();
+    getAllAssets();
+    filterAssets(allAssets);
+
   }
 
   User? firebaseUser = FirebaseAuth.instance.currentUser;
 
-  void filterAssets() {
-    final clientProvider =
-        Provider.of<clientusers>(context, listen: false).userInfo;
-    final assetProvider =
-        Provider.of<myassets>(context, listen: false).myassetinfo;
+  Future<void> getAllAssets() async {
+    final DatabaseReference databaseReference = FirebaseDatabase.instance.ref('Assets');
+    try {
+      // Fetch assets from Realtime Database
+      DatabaseEvent event = await databaseReference.once();
+      final dataSnapshot = event.snapshot;
 
-    if (assetProvider != null) {
-      filteredAssets = [];
-      if (assetProvider.CurrentUserid == firebaseUser?.uid) {
-        filteredAssets.add(assetProvider);
+      // Check if data exists
+      if (dataSnapshot.exists) {
+        // Convert the snapshot into a list of myassets objects
+        Map<dynamic, dynamic> assetsMap = dataSnapshot.value as Map<dynamic, dynamic>;
+
+        allAssets = assetsMap.entries.map((entry) {
+          // Safely convert the value to Map<String, dynamic>
+          final assetData = Map<String, dynamic>.from(entry.value as Map); // Safe conversion
+          return myassets.fromMap(assetData, entry.key.toString()); // Use the entry key as the ID
+        }).toList();
+
+        // Count the total number of assets
+        totalAssets = allAssets.length;
+        print('Total assets: $totalAssets');
+
+        // Call filterAssets to filter by the current user
+        filterAssets(allAssets);
+      } else {
+        print('No assets found.');
       }
+    } catch (e) {
+      print('Error fetching assets: $e');
     }
   }
+
+
+
+  void filterAssets(List<myassets> allAssets) {
+    final User? firebaseUser = FirebaseAuth.instance.currentUser;
+
+    // Clear previous filtered results
+    List<myassets> updatedFilteredAssets = [];
+
+    // Filter assets based on the CurrentUserId
+    for (var asset in allAssets) {
+      if (asset.CurrentUserid == firebaseUser?.uid) {
+        updatedFilteredAssets.add(asset);
+      }
+    }
+
+    // Update the state to refresh UI with filtered results
+    setState(() {
+      filteredAssets = updatedFilteredAssets;
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -72,9 +116,9 @@ class _ViewAssetState extends State<ViewAsset> {
             child: Container(
               height: 115,
               decoration: BoxDecoration(
-                color: Colors.black87,
+                color: Colors.black54,
                 borderRadius: BorderRadius.circular(20),
-                boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 6)],
+                boxShadow: [BoxShadow(color: Colors.white, blurRadius: 6)],
               ),
               child: Padding(
                 padding: const EdgeInsets.all(15.0),
@@ -87,65 +131,77 @@ class _ViewAssetState extends State<ViewAsset> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            "Total Assets",
-                            style: TextStyle(color: Colors.white70, fontSize: 18, fontWeight: FontWeight.bold),
+                          Center(
+                            child: Text(
+                              "Total Assets",
+                              style: TextStyle(color: Colors.white70, fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
                           ),
                           SizedBox(height: 5),
-                          Text(
-                            "${filteredAssets.length}",
-                            style: TextStyle(color: Colors.white70, fontSize: 16),
+                          Padding(
+                            padding: const EdgeInsets.only(left:1.0),
+                            child: Center(
+                              child: Text(
+                                "${totalAssets}",
+                                style: TextStyle(color: Colors.white70, fontSize: 16),
+                              ),
+                            ),
                           ),
                         ],
                       ),
                     ),
                     // Vertical Divider
                     Container(
-                      width: 1, // Thickness of the vertical line
-                      height: 40, // Height of the vertical line
-                      color: Colors.white24, // Line color
+                      width: 4, // Thickness of the vertical line
+                      height: 70, // Height of the vertical line
+
+                      color: Colors.white, // Line color
                     ),
                     SizedBox(width: 10), // Add space between sections
 
                     // Categories section
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Categories",
-                            style: TextStyle(color: Colors.white70, fontSize: 18, fontWeight: FontWeight.bold),
-
-                          ),
-                          SizedBox(height: 5),
-                          Text(
-                            assetProvider?.AssetType ?? "N/A",
-                            style: TextStyle(color: Colors.white70, fontSize: 16),
-                          ),
-                        ],
-                      ),
-                    ),
+                    // Expanded(
+                    //   child: Column(
+                    //     crossAxisAlignment: CrossAxisAlignment.start,
+                    //     children: [
+                    //       Text(
+                    //         "Categories",
+                    //         style: TextStyle(color: Colors.white70, fontSize: 18, fontWeight: FontWeight.bold),
+                    //
+                    //       ),
+                    //       SizedBox(height: 5),
+                    //       Text(
+                    //         assetProvider?.AssetType ?? "N/A",
+                    //         style: TextStyle(color: Colors.white70, fontSize: 16),
+                    //       ),
+                    //     ],
+                    //   ),
+                    // ),
                     // Vertical Divider
-                    Container(
-                      width: 1,
-                      height: 40,
-                      color: Colors.white24,
-                    ),
-                    SizedBox(width: 10),
+                    // Container(
+                    //   width: 1,
+                    //   height: 40,
+                    //   color: Colors.white24,
+                    // ),
+                    // SizedBox(width: 10),
 
                     // Username section
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            "Owner",
-                            style: TextStyle(color: Colors.white70, fontSize: 18, fontWeight: FontWeight.bold),
+                          Center(
+                            child: Text(
+                              "Owner",
+                              style: TextStyle(color: Colors.white70, fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
                           ),
                           SizedBox(height: 5),
-                          Text(
-                            clientProvider?.username ?? "",
-                            style: TextStyle(color: Colors.white70, fontSize: 16),
+                          Center(
+                            child: Text(
+                              clientProvider?.username ?? "",
+                              style: TextStyle(color: Colors.white70, fontSize: 16),
+                            ),
                           ),
                         ],
                       ),
@@ -180,8 +236,7 @@ class _ViewAssetState extends State<ViewAsset> {
                   Map<dynamic, dynamic>? map =
                   snapshot.data!.snapshot.value as Map<dynamic, dynamic>?;
                   map!.forEach((key, value) {
-                    myassets asset =
-                    myassets.fromMap(value.cast<String, dynamic>(),key);
+                    myassets asset = myassets.fromMap(value.cast<String, dynamic>(),key);
                     filteredAssets.add(asset);
                   });
                 }

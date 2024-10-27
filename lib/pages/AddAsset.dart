@@ -8,14 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart'; // Ensure you have provider set up
 
-// Dummy Providers for demonstration. Replace with your actual providers.
-class ClientUsers {
-  final userInfo = {'id': 'user123', 'name': 'John Doe'};
-}
 
-class MyAssets {
-  final myAssetInfo = {'id': 'asset123'};
-}
 
 class AddAsset extends StatefulWidget {
   const AddAsset({super.key});
