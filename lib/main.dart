@@ -1,3 +1,4 @@
+import 'package:dossier/banktest/Overview.dart';
 import 'package:dossier/pages/homepage.dart';
 import 'package:dossier/pages/login.dart';
 import 'package:dossier/pages/mainscreen.dart';
@@ -57,6 +58,7 @@ class MyApp extends StatelessWidget {
 
           // "/splash": (context) => SplashScreen(),
            "/main": (context) => MainScreen(),
+           "/bank": (context) => OverviewScreen(),
           "/login": (context) => LoginPage(),
           "/register": (context) => RegisterPage(),
            "/Homepage": (context) =>homepage(),
