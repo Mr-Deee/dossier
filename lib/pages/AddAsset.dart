@@ -79,7 +79,7 @@ class _AddAssetState extends State<AddAsset> {
               if (_currentStep != 0)
                 ElevatedButton(
                   onPressed: details.onStepCancel,
-                  child: const Text('Back'),
+                  child: const Text('Back',style: TextStyle(color: Colors.white),),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.black,
                   ),
@@ -138,11 +138,11 @@ class _AddAssetState extends State<AddAsset> {
     } else if (_currentStep == 1) {
       // Validate Details Form
       if (modelname.text.isEmpty ||
-          nameofT.text.isEmpty ||
+           nameofT.text.isEmpty ||
           contactoft.text.isEmpty ||
-          kinsmanmobilenumber.text.isEmpty ||
-          kinsmanname.text.isEmpty ||
-          type.text.isEmpty ||
+           kinsmanmobilenumber.text.isEmpty ||
+           kinsmanname.text.isEmpty ||
+           assetTypes.isEmpty ||
           tenure.text.isEmpty ||
           price.text.isEmpty ||
           assethandler.text.isEmpty ||
@@ -448,7 +448,7 @@ class _AddAssetState extends State<AddAsset> {
       final userId = FirebaseAuth.instance.currentUser?.uid;
       final email = FirebaseAuth.instance.currentUser?.email;
       final assetRef = _database.child('Assets').push();
-      await assetRef.set({
+      final assetData = {
         'uid': userId,
         'email': email,
         'AssetImages': _imageUrls,
@@ -463,39 +463,39 @@ class _AddAssetState extends State<AddAsset> {
         'AssetHandler': assethandler.text,
         'AssetWorth': double.tryParse(price.text) ?? 0.0,
         'Notification': {
-          'notificationId': assetRef.key,    // Notification reference key
-          'protocol': selectedProtocol,             // Protocol selected by the user
-          'interval': selectedInterval,             // Interval for notification (daily, weekly, etc.)
-          'scheduledDate': DateFormat('yMMMd').format(selectedDate!), // Scheduled date for the notification
-          'scheduledTime': selectedTime!.format(context),             // Scheduled time for the notification
+          'notificationId': assetRef.key, // Notification reference key
+          'protocol': selectedProtocol,  // Protocol selected by the user
+          'interval': selectedInterval,  // Interval for notification (daily, weekly, etc.)
+          'scheduledDate': DateFormat('yMMMd').format(selectedDate!), // Scheduled date
+          'scheduledTime': selectedTime!.format(context),             // Scheduled time
         },
-      });
+      };
+      await assetRef.set(assetData);
 
       // Schedule Notification
       final notificationRef = _database.child('Notifications').push();
-      await notificationRef.set({
+      final notificationData = {
         'assetId': assetRef.key,
         'protocol': selectedProtocol,
         'interval': selectedInterval,
         'scheduledDate': DateFormat('yMMMd').format(selectedDate!),
         'scheduledTime': selectedTime!.format(context),
         'NotificationID': notificationRef.key,
-      });
+      };
+      await notificationRef.set(notificationData);
 
+      // Reset loading state and show success message
       setState(() {
         _isLoading = false;
       });
 
-
-
       _showCustomSnackBar('Asset added successfully!');
-      // Clear the fields
-      _clearFields();
+      _clearFields(); // Clear input fields
     } catch (error) {
-      // print(error);
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   SnackBar(content: Text('Failed to add asset: $error')),
-      // );
+      print('Error adding asset: $error');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to add asset. Please try again.')),
+      );
     } finally {
       setState(() {
         _isLoading = false;
