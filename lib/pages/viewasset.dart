@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -20,72 +22,65 @@ class ViewAsset extends StatefulWidget {
 class _ViewAssetState extends State<ViewAsset> {
   List<myassets> filteredAssets = [];
   List<myassets> allAssets = []; // Assuming you have a list of assets
+  StreamSubscription<DatabaseEvent>? _assetsSubscription;
 
   int totalAssets = 0;
   @override
   void initState() {
     super.initState();
-    getAllAssets();
+    startAssetsListener();
     filterAssets(allAssets);
 
   }
 
   User? firebaseUser = FirebaseAuth.instance.currentUser;
 
-  Future<void> getAllAssets() async {
+  void startAssetsListener() {
     final DatabaseReference databaseReference = FirebaseDatabase.instance.ref('Assets');
-    try {
-      // Fetch assets from Realtime Database
-      DatabaseEvent event = await databaseReference.once();
+    _assetsSubscription = databaseReference.onValue.listen((DatabaseEvent event) {
       final dataSnapshot = event.snapshot;
 
-      // Check if data exists
       if (dataSnapshot.exists) {
         // Convert the snapshot into a list of myassets objects
         Map<dynamic, dynamic> assetsMap = dataSnapshot.value as Map<dynamic, dynamic>;
 
-        allAssets = assetsMap.entries.map((entry) {
+        List<myassets> updatedAssets = assetsMap.entries.map((entry) {
           // Safely convert the value to Map<String, dynamic>
           final assetData = Map<String, dynamic>.from(entry.value as Map); // Safe conversion
           return myassets.fromMap(assetData, entry.key.toString()); // Use the entry key as the ID
         }).toList();
 
-        // Count the total number of assets
-        // totalAssets = allAssets.length;
-        print('Total assets: $totalAssets');
-
-        // Call filterAssets to filter by the current user
-        filterAssets(allAssets);
+        // Update all assets and filter them
+        setState(() {
+          allAssets = updatedAssets;
+          filterAssets(allAssets);
+        });
       } else {
         print('No assets found.');
+        setState(() {
+          allAssets = [];
+          filteredAssets = [];
+          totalAssets = 0;
+        });
       }
-    } catch (e) {
-      print('Error fetching assets: $e');
-    }
+    }, onError: (error) {
+      print('Error fetching assets: $error');
+    });
   }
-
-
 
   void filterAssets(List<myassets> allAssets) {
     final User? firebaseUser = FirebaseAuth.instance.currentUser;
 
-    // Clear previous filtered results
-    List<myassets> updatedFilteredAssets = [];
-
     // Filter assets based on the CurrentUserId
-    for (var asset in allAssets) {
-      if (asset.CurrentUserid == firebaseUser?.uid) {
-        updatedFilteredAssets.add(asset);
-      }
-    }
+    List<myassets> updatedFilteredAssets = allAssets
+        .where((asset) => asset.CurrentUserid == firebaseUser?.uid)
+        .toList();
 
-    // Update the state to refresh UI with filtered results
     setState(() {
       filteredAssets = updatedFilteredAssets;
-      totalAssets=updatedFilteredAssets.length;
+      totalAssets = updatedFilteredAssets.length;
     });
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -110,7 +105,7 @@ class _ViewAssetState extends State<ViewAsset> {
       //     },
       //   ),
       // ),
-      body: CustomPaint(
+      body:CustomPaint(
         painter: GradientBackgroundPainter(),
         child: Column(
           children: [
@@ -118,70 +113,74 @@ class _ViewAssetState extends State<ViewAsset> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 18.0),
               child: Container(
-                height: 115,
+                height: 130,
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [BoxShadow(color: Colors.white, blurRadius: 6)],
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: Offset(0, 5),
+                    ),
+                  ],
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(15.0),
+                  padding: const EdgeInsets.all(20.0),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Total Assets Section
                       Expanded(
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Center(
-                              child: Text(
-                                "Total Assets",
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                            Text(
+                              "Total Assets",
+                              style: TextStyle(
+                                color: Colors.grey[800],
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                            SizedBox(height: 5),
-                            Center(
-                              child: Text(
-                                "${totalAssets}",
-                                style: TextStyle(color: Colors.black, fontSize: 16),
+                            SizedBox(height: 10),
+                            Text(
+                              "${totalAssets}",
+                              style: TextStyle(
+                                color: Colors.teal,
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      // Vertical Divider
-                      Container(
-                        width: 4,
-                        height: 70,
-                        color: Colors.black,
+                      VerticalDivider(
+                        color: Colors.grey[300],
+                        thickness: 1,
+                        width: 40,
                       ),
-                      SizedBox(width: 10),
                       // Owner Section
                       Expanded(
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Center(
-                              child: Text(
-                                "Owner",
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                            Text(
+                              "Owner",
+                              style: TextStyle(
+                                color: Colors.grey[800],
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                            SizedBox(height: 5),
-                            Center(
-                              child: Text(
-                                clientProvider?.username ?? "",
-                                style: TextStyle(color: Colors.black, fontSize: 16),
+                            SizedBox(height: 10),
+                            Text(
+                              clientProvider?.username ?? "N/A",
+                              style: TextStyle(
+                                color: Colors.teal,
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ],
@@ -190,9 +189,9 @@ class _ViewAssetState extends State<ViewAsset> {
                     ],
                   ),
                 ),
-                width: MediaQuery.of(context).size.width,
               ),
             ),
+            SizedBox(height: 20),
             // StreamBuilder Section
             Expanded(
               child: StreamBuilder(
@@ -208,7 +207,12 @@ class _ViewAssetState extends State<ViewAsset> {
                   }
 
                   if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
+                    return Center(
+                      child: Text(
+                        'Error: ${snapshot.error}',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    );
                   }
 
                   List<myassets> filteredAssets = [];
@@ -216,13 +220,22 @@ class _ViewAssetState extends State<ViewAsset> {
                     Map<dynamic, dynamic>? map =
                     snapshot.data!.snapshot.value as Map<dynamic, dynamic>?;
                     map!.forEach((key, value) {
-                      myassets asset =
-                      myassets.fromMap(value.cast<String, dynamic>(), key);
+                      myassets asset = myassets.fromMap(value.cast<String, dynamic>(), key);
                       filteredAssets.add(asset);
                     });
                   }
 
+                  if (filteredAssets.isEmpty) {
+                    return Center(
+                      child: Text(
+                        "No Assets Found",
+                        style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                      ),
+                    );
+                  }
+
                   return ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     itemCount: filteredAssets.length,
                     itemBuilder: (context, index) {
                       final asset = filteredAssets[index];
@@ -231,70 +244,64 @@ class _ViewAssetState extends State<ViewAsset> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => AssetDetailsScreen(
-                                asset: asset,
-                              ),
+                              builder: (context) => AssetDetailsScreen(asset: asset),
                             ),
                           );
                         },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 10.0, horizontal: 13),
-                          child: Container(
-                            height: 110,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.grey.withOpacity(0.4),
-                                  spreadRadius: 1,
-                                  blurRadius: 6,
-                                  offset: Offset(0, 3),
+                        child: Card(
+                          margin: EdgeInsets.only(bottom: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 3,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Row(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Image.network(
+                                    asset.AssetImages ?? '',
+                                    height: 70,
+                                    width: 70,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) => Icon(
+                                      Icons.broken_image,
+                                      size: 70,
+                                      color: Colors.grey[400],
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        asset.AssetName ?? '',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.grey[800],
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      SizedBox(height: 8),
+                                      Text(
+                                        'Worth: ${asset.AssetWorth ?? ''}',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.chevron_right,
+                                  color: Colors.grey[500],
                                 ),
                               ],
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(12.0),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Image.network(
-                                      asset.AssetImages ?? '',
-                                      height: 70,
-                                      width: 90,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                  SizedBox(width: 10),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                      children: [
-                                        Text(
-                                          asset.AssetName ?? '',
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        Text(
-                                          'Worth: ${asset.AssetWorth ?? ''}',
-                                          style: TextStyle(
-                                            color: Colors.grey[600],
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Icon(Icons.chevron_right, color: Colors.grey),
-                                ],
-                              ),
                             ),
                           ),
                         ),
@@ -306,7 +313,8 @@ class _ViewAssetState extends State<ViewAsset> {
             ),
           ],
         ),
-      ),
+      )
+
     );
   }
 }

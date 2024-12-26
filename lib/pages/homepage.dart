@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -266,7 +267,7 @@ class _homepageState extends State<homepage> {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Container(
-                height: 210,
+                height: 211,
                 decoration: BoxDecoration(
                   border: Border.all(
                     color: Colors.black, // Set border color to black
@@ -376,13 +377,13 @@ class _homepageState extends State<homepage> {
       'contentBuilder': () => SavingsPage(),
     },
     {
-      'icon': Icons.event,
-      'title': 'Events',
-      'contentBuilder': () => EventPage(),
+      'icon': Icons.add_chart_outlined,
+      'title': 'Legacy',
+      'contentBuilder': () => LegacyPage(),
     },
     {
       'icon': Icons.notifications,
-      'title': 'Notifications',
+      'title': 'SOS',
       'contentBuilder': () => NotificationPage(),
     },
     {
@@ -475,7 +476,7 @@ class _SavingsPageState extends State<SavingsPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         title: Text(
-          'Hi, John!',
+          '',
           style: TextStyle(color: Colors.black),
         ),
         actions: [
@@ -555,7 +556,7 @@ class HomeContent extends StatelessWidget {
                   SizedBox(height: 10),
                   Text(
                     '+3.50% from last month',
-                    style: TextStyle(color: Colors.white70, fontSize: 16),
+                    style: TextStyle(color: Colors.black54, fontSize: 16),
                   ),
                   SizedBox(height: 10),
                   Row(
@@ -563,11 +564,11 @@ class HomeContent extends StatelessWidget {
                     children: [
                       Text(
                         '**** 1214',
-                        style: TextStyle(color: Colors.white),
+                        style: TextStyle(color: Colors.black54),
                       ),
                       Text(
                         'Exp 02/15',
-                        style: TextStyle(color: Colors.white),
+                        style: TextStyle(color: Colors.black54),
                       ),
                     ],
                   ),
@@ -734,18 +735,237 @@ class ProfileContent extends StatelessWidget {
   }
 }
 
-class EventPage extends StatefulWidget {
+class LegacyPage extends StatefulWidget {
   @override
-  _EventPageState createState() => _EventPageState();
+  _LegacyPageState createState() => _LegacyPageState();
 }
 
-class _EventPageState extends State<EventPage> {
+class _LegacyPageState extends State<LegacyPage> {
+  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref("legacy");
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _detailsController = TextEditingController();
+  final TextEditingController _timelineController = TextEditingController();
+
+  List<Map<String, dynamic>> _legacies = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLegacyData();
+  }
+
+  Future<void> _addLegacy(String title, String details, String timeline) async {
+    final key = _dbRef.push().key;
+    if (key != null) {
+      await _dbRef.child(key).set({
+        "title": title,
+        "details": details,
+        "timeline": timeline,
+        "timestamp": DateTime.now().toIso8601String(),
+      });
+    }
+  }
+
+  Future<void> _deleteLegacy(String key) async {
+    await _dbRef.child(key).remove();
+    setState(() {
+      _legacies.removeWhere((legacy) => legacy['key'] == key);
+    });
+  }
+
+  Future<void> _loadLegacyData() async {
+    final snapshot = await _dbRef.get();
+    if (snapshot.exists) {
+      final data = snapshot.value as Map<dynamic, dynamic>;
+      setState(() {
+        _legacies = data.entries
+            .map((entry) => {
+          "key": entry.key,
+          "title": entry.value["title"],
+          "details": entry.value["details"],
+          "timeline": entry.value["timeline"],
+          "timestamp": entry.value["timestamp"],
+        })
+            .toList();
+      });
+    }
+  }
+
+  void _showAddLegacyModal() {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevents dismissing by tapping outside
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            bool isLoading = false; // Tracks loading state
+
+            return Dialog(
+              insetPadding: EdgeInsets.all(10), // Makes it almost full-screen
+              child: Container(
+                padding: const EdgeInsets.all(20.0),
+                height: MediaQuery.of(context).size.height * 0.9, // 90% of screen height
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Add New Legacy",
+                          style: const TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, size: 28),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    TextField(
+                      controller: _titleController,
+                      style: const TextStyle(fontSize: 18),
+                      decoration: const InputDecoration(
+                        labelText: "Title",
+                        labelStyle: TextStyle(fontSize: 16),
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Expanded(
+                      child: TextField(
+                        controller: _detailsController,
+                        style: const TextStyle(fontSize: 18),
+                        decoration: const InputDecoration(
+                          labelText: "Details",
+                          labelStyle: TextStyle(fontSize: 16),
+                          border: OutlineInputBorder(),
+                        ),
+                        maxLines: null,
+                        expands: true,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    TextField(
+                      controller: _timelineController,
+                      style: const TextStyle(fontSize: 18),
+                      decoration: const InputDecoration(
+                        labelText: "Timeline (e.g., 2024-12-31)",
+                        labelStyle: TextStyle(fontSize: 16),
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+                    ElevatedButton(
+                      onPressed: isLoading
+                          ? null // Disable button during loading
+                          : () async {
+                        final title = _titleController.text.trim();
+                        final details = _detailsController.text.trim();
+                        final timeline = _timelineController.text.trim();
+
+                        if (title.isNotEmpty &&
+                            details.isNotEmpty &&
+                            timeline.isNotEmpty) {
+                          setState(() {
+                            isLoading = true;
+                          });
+
+                          // Simulate saving process
+                          await Future.delayed(const Duration(seconds: 2));
+
+                          await _addLegacy(title, details, timeline);
+                          _titleController.clear();
+                          _detailsController.clear();
+                          _timelineController.clear();
+                          _loadLegacyData();
+
+                          setState(() {
+                            isLoading = false;
+                          });
+
+                          // Show success message
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                "Legacy added successfully!",
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 50),
+                        textStyle: const TextStyle(fontSize: 20),
+                      ),
+                      child: isLoading
+                          ? const CircularProgressIndicator(
+                        color: Colors.white,
+                      )
+                          : const Text("Save Legacy"),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+
+
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        'Upcoming Events will be displayed here.',
-        style: TextStyle(fontSize: 18),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Legacy Journal"),
+      ),
+      body: _legacies.isEmpty
+          ? const Center(
+        child: Text(
+          "No legacies added yet. Tap the + button to add one.",
+          style: TextStyle(fontSize: 16),
+          textAlign: TextAlign.center,
+        ),
+      )
+          : ListView.builder(
+        itemCount: _legacies.length,
+        itemBuilder: (context, index) {
+          final legacy = _legacies[index];
+          return Card(
+            margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+            child: ListTile(
+              title: Text(legacy["title"]),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(legacy["details"]),
+                  const SizedBox(height: 4),
+                  Text(
+                    "Timeline: ${legacy["timeline"]}",
+                    style: const TextStyle(fontStyle: FontStyle.italic),
+                  ),
+                ],
+              ),
+              trailing: IconButton(
+                icon: const Icon(Icons.delete, color: Colors.red),
+                onPressed: () => _deleteLegacy(legacy["key"]),
+              ),
+            ),
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddLegacyModal,
+        child: const Icon(Icons.add),
       ),
     );
   }
