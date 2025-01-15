@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -142,5 +143,17 @@ class _ProfileState extends State<Profile> {
         ),
       ],
     ));
+  }
+}
+Future<void> _signOut(BuildContext context) async {
+  try {
+    await FirebaseAuth.instance.signOut();
+    // Navigate to the login screen or any other screen after signing out
+    Navigator.of(context).pushReplacementNamed('/login');
+  } catch (e) {
+    // Handle errors
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error signing out: $e')),
+    );
   }
 }

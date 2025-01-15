@@ -58,13 +58,6 @@ class _homepageState extends State<homepage> {
             children: [
               Column(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 18.0, left: 18),
-                    child: Text(
-// '                       'Hi ' + '${clientProvider?.username ?? ""}!',
-                      '                      style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold)',
-                    ),
-                  ),
                   Row(
                     children: [
                       Padding(
@@ -80,9 +73,9 @@ class _homepageState extends State<homepage> {
               ),
             ],
           ),
-          SizedBox(height: 11),
+          SizedBox(height: 4),
           Padding(
-            padding: const EdgeInsets.only(top: 18.0),
+            padding: const EdgeInsets.only(top: 8.0),
             child: Container(
               height: 120,
               decoration: BoxDecoration(
@@ -100,7 +93,7 @@ class _homepageState extends State<homepage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
-                        padding: EdgeInsets.only(top: 18.0, left: 8),
+                        padding: EdgeInsets.only(top: 13.0, left: 8),
                         child: Text('Welcome!', style: TextStyle(fontSize: 20)),
                       ),
                       Padding(

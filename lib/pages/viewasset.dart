@@ -415,6 +415,7 @@ class AssetDetailsScreen extends StatelessWidget {
 
                     // Asset Category
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
                         const Icon(Icons.category, color: Colors.blueAccent, size: 24),
                         const SizedBox(width: 10),
@@ -426,6 +427,31 @@ class AssetDetailsScreen extends StatelessWidget {
                             color: Colors.black54,
                           ),
                         ),
+                        IconButton(
+                          onPressed: () async {
+                            // Await the result of the confirmation dialog
+                            bool confirmDelete = await _showDeleteConfirmationDialog(context);
+                            if (confirmDelete) {
+                              // Perform deletion logic (e.g., remove from database)
+                              String? assetId = asset.id;
+                              if (assetId != null) {
+                                await FirebaseDatabase.instance.ref('Assets/$assetId').remove();
+                              }
+
+                              // Optionally show a success message
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Asset deleted successfully"),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+
+                              // Navigate back to the previous screen
+                              Navigator.pop(context);
+                            }
+                          },                          icon: const Icon(Icons.delete, color: Colors.red),
+                        ),
+
                       ],
                     ),
 
@@ -450,16 +476,6 @@ class AssetDetailsScreen extends StatelessWidget {
                   String?  docid=asset.id;
                     // print('document$docid');
                     _showScheduleNotificationDialog(context);
-                  },
-                ),
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.edit_notifications, color: Colors.white),
-                  label: const Text(""),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueAccent,
-                  ),
-                  onPressed: () {
-                    _editScheduledNotification(context);
                   },
                 ),
               ],
@@ -697,6 +713,47 @@ class AssetDetailsScreen extends StatelessWidget {
   void _editScheduledNotification(BuildContext context) {
     // This function can contain your logic to edit an existing scheduled notification.
   }
+
+
+  Future<bool> _showDeleteConfirmationDialog(BuildContext context) async {
+    return await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Delete Asset"),
+          content: const Text("Are you sure you want to delete this asset?"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false); // User canceled
+              },
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop(true); // User confirmed
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+              child: const Text("Delete"),
+            ),
+          ],
+        );
+      },
+    ) ?? false; // Default to false if dialog is dismissed
+  }
+
+  void _deleteAsset(BuildContext context) {
+    // Implement the logic to delete the asset
+    // Example: Call Firebase or backend API to delete the asset from the database
+    // After deletion, navigate back to the previous screen
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Asset deleted successfully")),
+    );
+
+    Navigator.of(context).pop(); // Navigate back to the previous screen
+  }
+
+
 }
 
 
