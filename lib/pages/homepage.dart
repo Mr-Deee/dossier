@@ -366,7 +366,7 @@ class _homepageState extends State<homepage> {
   final List<Map<String, dynamic>> icons = [
     {
       'icon': Icons.monetization_on,
-      'title': 'Savings',
+      'title': 'My Savings',
       'contentBuilder': () => SavingsPage(),
     },
     {
@@ -514,182 +514,207 @@ class _SavingsPageState extends State<SavingsPage> {
   }
 }
 
-// Home Page Content
-class HomeContent extends StatelessWidget {
+class HomeContent extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
+  _HomeContentState createState() => _HomeContentState();
+}
+
+class _HomeContentState extends State<HomeContent> {
+  final DatabaseReference _database = FirebaseDatabase.instance.ref("accountsTable");
+  List<Map<dynamic, dynamic>> _accounts = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchAccounts();
+  }
+
+  void _fetchAccounts() {
+    _database.onValue.listen((event) {
+      final data = event.snapshot.value;
+      if (data != null && data is Map) {
+        setState(() {
+          _accounts = data.entries.map((e) => Map<dynamic, dynamic>.from(e.value)).toList();
+        });
+      } else {
+        setState(() {
+          _accounts = [];
+        });
+      }
+    });
+  }
+
+  Widget buildBalanceCard(Map<dynamic, dynamic> account) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Container(
+        width: 233,
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black26,
+              offset: Offset(2, 2),
+              blurRadius: 2,
+            ),
+          ],
+          color: Colors.amber,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        padding: EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Balance Card
-            Container(
-              decoration: BoxDecoration(
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black26,
-                    offset: Offset(2, 2),
-
-                      blurRadius: 2
-                  )
-                ],
-                color: Colors.amber,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              padding: EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '\$16,567.00',
-                    style: TextStyle(color: Colors.black, fontSize: 24),
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    '+3.50% from last month',
-                    style: TextStyle(color: Colors.black54, fontSize: 16),
-                  ),
-                  SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '**** 1214',
-                        style: TextStyle(color: Colors.black54),
-                      ),
-                      Text(
-                        'Exp 02/15',
-                        style: TextStyle(color: Colors.black54),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 19),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-
-                          backgroundColor: Colors.black,
-                        ),
-                        child: Text('Add Money',style: TextStyle(color: Colors.white),),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+            Text(
+              '\$${account["balance"] ?? "0.00"}',
+              style: TextStyle(color: Colors.black, fontSize: 24),
             ),
-            // SizedBox(height: 20),
-
-            SizedBox(
-              height: 15,
+            SizedBox(height: 10),
+            Text(
+              'Account: ${account["accountName"] ?? "Unknown"}',
+              style: TextStyle(color: Colors.black54, fontSize: 16),
             ),
+            SizedBox(height: 10),
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
-                  child: Row(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            color: Colors.amber,
-                            boxShadow: [
-                              BoxShadow(
-                                blurRadius: 3,
-                                offset: Offset(1, 2),
-                                color: Colors.black26,
-                              )
-                            ]),
-                        height: 53,
-                        width: 53,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [Icon(Icons.add)],
-                        ),
-                      ),
-                      SizedBox(
-                        width: 23,
-                      ),
-                      Container(
-
-                        height: 53,
-                        width: 53,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          color: Colors.amber,
-                          boxShadow: [
-                            BoxShadow(
-                              blurRadius: 3,
-                              offset: Offset(1, 2),
-                              color: Colors.black26,
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [Icon(Icons.add_card)],
-                        ),
-                      ),
-                      SizedBox(
-                        width: 23,
-                      ),
-                      Container(
-
-                        height: 53,
-                        width: 53,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          color: Colors.amber,
-                          boxShadow: [
-                            BoxShadow(
-                              blurRadius: 3,
-                              offset: Offset(1, 2),
-                              color: Colors.black26,
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [Icon(Icons.accessibility)],
-                        ),
-                      )
-                    ],
-                  ),
-                )
+                Text(
+                  '**** ${account["accountNumber"] ?? "XXXX"}',
+                  style: TextStyle(color: Colors.black54),
+                ),
+                Text(
+                  'Exp ${account["expiry"] ?? "N/A"}',
+                  style: TextStyle(color: Colors.black54),
+                ),
               ],
             ),
-            SizedBox(height: 15,),
-
-            // Transactions
-            Text('Transactions',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            SizedBox(height: 15,),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              itemCount: 4,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  leading: Icon(Icons.attach_money, color: Colors.blue),
-                  title: Text('Top up'),
-                  subtitle: Text('Today 1:53 PM'),
-                  trailing:
-                      Text('+\$100.00', style: TextStyle(color: Colors.green)),
-                );
-              },
+            SizedBox(height: 19),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                ElevatedButton(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                  ),
+                  child: Text('Add Money', style: TextStyle(color: Colors.white)),
+                ),
+              ],
             ),
           ],
         ),
       ),
     );
   }
-}
 
-// Activity Page Content
+  void _showAddAccountDialog() {
+    TextEditingController accountNameController = TextEditingController();
+    TextEditingController balanceController = TextEditingController();
+    TextEditingController expiryController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Add Account"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: accountNameController,
+              decoration: InputDecoration(labelText: "Account Name"),
+            ),
+            TextField(
+              controller: balanceController,
+              decoration: InputDecoration(labelText: "Balance"),
+              keyboardType: TextInputType.number,
+            ),
+            TextField(
+              controller: expiryController,
+              decoration: InputDecoration(labelText: "Expiry Date (MM/YY)"),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              String accountName = accountNameController.text.trim();
+              String balance = balanceController.text.trim();
+              String expiry = expiryController.text.trim();
+
+              if (accountName.isNotEmpty && balance.isNotEmpty && expiry.isNotEmpty) {
+                DatabaseReference newAccount = _database.push();
+                await newAccount.set({
+                  "accountName": accountName,
+                  "balance": balance,
+                  "expiry": expiry,
+                  "accountNumber": "${newAccount.key?.substring(0, 4)}****",
+                  "lastUpdated": DateTime.now().toString(),
+                });
+
+                Navigator.pop(context);
+              }
+            },
+            child: Text("Save"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Your Accounts"),
+        backgroundColor: Colors.amber,
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Horizontal scrolling balance cards
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: _accounts.map((account) => buildBalanceCard(account)).toList(),
+                ),
+              ),
+              SizedBox(height: 15),
+              Text('Transactions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              SizedBox(height: 15),
+              ListView.builder(
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+                itemCount: _accounts.length,
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    leading: Icon(Icons.attach_money, color: Colors.blue),
+                    title: Text('${_accounts[index]["accountName"] ?? "Account"}'),
+                    subtitle: Text('Updated ${_accounts[index]["lastUpdated"] ?? "N/A"}'),
+                    trailing: Text(
+                      '\$${_accounts[index]["balance"] ?? "0.00"}',
+                      style: TextStyle(color: Colors.green),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddAccountDialog,
+        child: Icon(Icons.add),
+        backgroundColor: Colors.amber,
+      ),
+    );
+  }
+}
 class ActivityContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
