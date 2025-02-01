@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import '../Assistants/assistantMethods.dart';
 import '../models/clientuser.dart';
 import '../widget/mycards.dart';
+import 'AccountDetails.dart';
 
 class homepage extends StatefulWidget {
   const homepage({super.key});
@@ -544,12 +545,33 @@ class _HomeContentState extends State<HomeContent> {
     });
   }
 
+  Map<String, Map<String, dynamic>> bankStyles = {
+    "OmniBsic Bank": {
+      "gradient": [Colors.blue, Colors.blueAccent],
+      "logo": "assets/images/omnibsic.png",
+    },
+    "Zenith": {
+      "gradient": [Colors.red, Colors.orange],
+      "logo": "assets/bank_b_logo.png",
+    },
+    "Absa": {
+      "gradient": [Colors.green, Colors.teal],
+      "logo": "assets/bank_c_logo.png",
+    },
+  };
+
   Widget buildBalanceCard(Map<dynamic, dynamic> account) {
+    String bank = account["bank"] ?? "Default Bank";
+    List<Color> gradientColors = bankStyles[bank]?["gradient"] ?? [Colors.grey, Colors.black];
+    String logoPath = bankStyles[bank]?["logo"] ?? "assets/default_logo.png";
+
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Container(
-        width: 233,
+        width: 383,
         decoration: BoxDecoration(
+          gradient: LinearGradient(colors: gradientColors),
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
               color: Colors.black26,
@@ -557,21 +579,23 @@ class _HomeContentState extends State<HomeContent> {
               blurRadius: 2,
             ),
           ],
-          color: Colors.amber,
-          borderRadius: BorderRadius.circular(16),
         ),
         padding: EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Align(
+              alignment: Alignment.topRight,
+              child: Image.asset(logoPath, width: 50, height: 50),
+            ),
             Text(
               '\$${account["balance"] ?? "0.00"}',
-              style: TextStyle(color: Colors.black, fontSize: 24),
+              style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 10),
             Text(
               'Account: ${account["accountName"] ?? "Unknown"}',
-              style: TextStyle(color: Colors.black54, fontSize: 16),
+              style: TextStyle(color: Colors.white70, fontSize: 16),
             ),
             SizedBox(height: 10),
             Row(
@@ -579,11 +603,11 @@ class _HomeContentState extends State<HomeContent> {
               children: [
                 Text(
                   '**** ${account["accountNumber"] ?? "XXXX"}',
-                  style: TextStyle(color: Colors.black54),
+                  style: TextStyle(color: Colors.white70),
                 ),
                 Text(
                   'Exp ${account["expiry"] ?? "N/A"}',
-                  style: TextStyle(color: Colors.black54),
+                  style: TextStyle(color: Colors.white70),
                 ),
               ],
             ),
@@ -592,11 +616,16 @@ class _HomeContentState extends State<HomeContent> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                  ),
-                  child: Text('Add Money', style: TextStyle(color: Colors.white)),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AccountDetailsPage(accountData: account),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
+                  child: Text('View Account', style: TextStyle(color: Colors.black)),
                 ),
               ],
             ),
@@ -606,10 +635,77 @@ class _HomeContentState extends State<HomeContent> {
     );
   }
 
+
+  // Widget buildBalanceCard(Map<dynamic, dynamic> account) {
+  //   return Padding(
+  //     padding: const EdgeInsets.all(8.0),
+  //     child: Container(
+  //       width: 383,
+  //
+  //       decoration: BoxDecoration(
+  //         boxShadow: [
+  //           BoxShadow(
+  //             color: Colors.black26,
+  //             offset: Offset(2, 2),
+  //             blurRadius: 2,
+  //           ),
+  //         ],
+  //         color: Colors.amber,
+  //         borderRadius: BorderRadius.circular(16),
+  //       ),
+  //       padding: EdgeInsets.all(20),
+  //       child: Column(
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         children: [
+  //           Text(
+  //             '\$${account["balance"] ?? "0.00"}',
+  //             style: TextStyle(color: Colors.black, fontSize: 24),
+  //           ),
+  //           SizedBox(height: 10),
+  //           Text(
+  //             'Account: ${account["accountName"] ?? "Unknown"}',
+  //             style: TextStyle(color: Colors.black54, fontSize: 16),
+  //           ),
+  //           SizedBox(height: 10),
+  //           Row(
+  //             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //             children: [
+  //               Text(
+  //                 '**** ${account["accountNumber"] ?? "XXXX"}',
+  //                 style: TextStyle(color: Colors.black54),
+  //               ),
+  //               Text(
+  //                 'Exp ${account["expiry"] ?? "N/A"}',
+  //                 style: TextStyle(color: Colors.black54),
+  //               ),
+  //             ],
+  //           ),
+  //           SizedBox(height: 19),
+  //           Row(
+  //             mainAxisAlignment: MainAxisAlignment.end,
+  //             children: [
+  //               ElevatedButton(
+  //                 onPressed: () {
+  //
+  //                 },
+  //                 style: ElevatedButton.styleFrom(
+  //                   backgroundColor: Colors.black,
+  //                 ),
+  //                 child: Text('View Account', style: TextStyle(color: Colors.white)),
+  //               ),
+  //             ],
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
+
   void _showAddAccountDialog() {
     TextEditingController accountNameController = TextEditingController();
     TextEditingController balanceController = TextEditingController();
     TextEditingController expiryController = TextEditingController();
+    String? selectedBank;
 
     showDialog(
       context: context,
@@ -618,6 +714,16 @@ class _HomeContentState extends State<HomeContent> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            DropdownButtonFormField<String>(
+              decoration: InputDecoration(labelText: "Select Bank"),
+              value: selectedBank,
+              items: bankStyles.keys.map((bank) {
+                return DropdownMenuItem(value: bank, child: Text(bank));
+              }).toList(),
+              onChanged: (value) {
+                selectedBank = value;
+              },
+            ),
             TextField(
               controller: accountNameController,
               decoration: InputDecoration(labelText: "Account Name"),
@@ -640,6 +746,8 @@ class _HomeContentState extends State<HomeContent> {
           ),
           ElevatedButton(
             onPressed: () async {
+              if (selectedBank == null) return;
+
               String accountName = accountNameController.text.trim();
               String balance = balanceController.text.trim();
               String expiry = expiryController.text.trim();
@@ -650,6 +758,7 @@ class _HomeContentState extends State<HomeContent> {
                   "accountName": accountName,
                   "balance": balance,
                   "expiry": expiry,
+                  "bank": selectedBank,
                   "accountNumber": "${newAccount.key?.substring(0, 4)}****",
                   "lastUpdated": DateTime.now().toString(),
                 });
@@ -667,10 +776,7 @@ class _HomeContentState extends State<HomeContent> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Your Accounts"),
-        backgroundColor: Colors.amber,
-      ),
+
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
