@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -91,20 +92,6 @@ class _ViewAssetState extends State<ViewAsset> {
 
     return Scaffold(
 
-      // appBar: AppBar(
-      //   title: Text(
-      //     'Your Assets',
-      //     style: TextStyle(color: Colors.white, fontSize: 18),
-      //   ),
-      //   centerTitle: true,
-      //   backgroundColor: Colors.black87,
-      //   leading: IconButton(
-      //     icon: Icon(Icons.arrow_back, color: Colors.white),
-      //     onPressed: () {
-      //       Navigator.of(context).pop();
-      //     },
-      //   ),
-      // ),
       body:CustomPaint(
         painter: GradientBackgroundPainter(),
         child: Column(
@@ -194,16 +181,14 @@ class _ViewAssetState extends State<ViewAsset> {
             SizedBox(height: 20),
             // StreamBuilder Section
             Expanded(
-              child: StreamBuilder(
+              child: StreamBuilder<DatabaseEvent>(
                 stream: _databaseReference
                     .orderByChild('CurrentUser')
                     .equalTo(firebaseUser?.uid)
-                    .onValue,
+                    .onValue,  // Keeps listening and updating in real time
                 builder: (BuildContext context, AsyncSnapshot<DatabaseEvent> snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(
-                      child: CircularProgressIndicator(),
-                    );
+                    return Center(child: CircularProgressIndicator());
                   }
 
                   if (snapshot.hasError) {
@@ -219,7 +204,7 @@ class _ViewAssetState extends State<ViewAsset> {
                   if (snapshot.hasData && snapshot.data!.snapshot.value != null) {
                     Map<dynamic, dynamic>? map =
                     snapshot.data!.snapshot.value as Map<dynamic, dynamic>?;
-                    map!.forEach((key, value) {
+                    map?.forEach((key, value) {
                       myassets asset = myassets.fromMap(value.cast<String, dynamic>(), key);
                       filteredAssets.add(asset);
                     });
@@ -260,19 +245,31 @@ class _ViewAssetState extends State<ViewAsset> {
                               children: [
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(10),
-                                  child: Image.network(
-                                    asset.AssetImages ?? '',
+                                  child: CachedNetworkImage(
+                                    imageUrl: asset.AssetImages?.isNotEmpty == true ? asset.AssetImages! : 'https://via.placeholder.com/70',
                                     height: 70,
                                     width: 70,
                                     fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) => Icon(
-                                      Icons.broken_image,
-                                      size: 70,
-                                      color: Colors.grey[400],
+                                    placeholder: (context, url) => Container(
+                                      height: 70,
+                                      width: 70,
+                                      alignment: Alignment.center,
+                                      color: Colors.grey[200],
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    ),
+                                    errorWidget: (context, url, error) => Container(
+                                      height: 70,
+                                      width: 70,
+                                      color: Colors.grey[300],
+                                      alignment: Alignment.center,
+                                      child: Icon(
+                                        Icons.broken_image,
+                                        size: 40,
+                                        color: Colors.grey[600],
+                                      ),
                                     ),
                                   ),
-                                ),
-                                SizedBox(width: 16),
+                                ),                                SizedBox(width: 16),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -310,7 +307,8 @@ class _ViewAssetState extends State<ViewAsset> {
                   );
                 },
               ),
-            ),
+            )
+
           ],
         ),
       )
