@@ -355,13 +355,19 @@ class AssetDetailsScreen extends StatefulWidget {
 
 class _AssetDetailsScreenState extends State<AssetDetailsScreen> {
   late String selectedImage;
+  List<String> imageList = [];
 
   @override
   void initState() {
     super.initState();
-    selectedImage = widget.asset.AssetImages?.isNotEmpty == true
-        ? widget.asset.AssetImages![0]
-        : "https://via.placeholder.com/200"; // Fallback image
+
+    // Convert AssetImages (String) to a List if it contains multiple images
+    imageList = widget.asset.AssetImages != null && widget.asset.AssetImages!.isNotEmpty
+        ? widget.asset.AssetImages!.map((e) => e.trim()).toList()
+        : [];
+
+    // Set the selected image to the first image or fallback
+    selectedImage = imageList.isNotEmpty ? imageList[0] : "https://via.placeholder.com/200";
   }
 
   void updateSelectedImage(String imageUrl) {
@@ -400,22 +406,24 @@ class _AssetDetailsScreenState extends State<AssetDetailsScreen> {
                     ),
                     SizedBox(height: 10),
                     Text("Asset Name: ${widget.asset.AssetName}", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    Text("Senior: ${widget.asset.KinsMan}", style: TextStyle(fontSize: 16)),
-                    Text("Stuff: ${widget.asset.myassetinfo}", style: TextStyle(fontSize: 16)),
+                    Text("Assent Handler: ${widget.asset}", style: TextStyle(fontSize: 16)),
+                    Text("KinsMan: ${widget.asset.KinsMan}", style: TextStyle(fontSize: 16)),
                     Text("Status: ${widget.asset.Tenure}", style: TextStyle(fontSize: 16, color: Colors.green)),
                   ],
                 ),
               ),
             ),
             SizedBox(height: 20),
-            if (widget.asset.AssetImages != null && widget.asset.AssetImages!.isNotEmpty) ...[
+
+            // Show more images only if images exist
+            if (imageList.isNotEmpty) ...[
               Text("More Images", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               SizedBox(height: 10),
               SizedBox(
                 height: 100, // Set a fixed height
                 child: ListView(
                   scrollDirection: Axis.horizontal,
-                  children: widget.asset.AssetImages!.map((imageUrl) {
+                  children: imageList.map((imageUrl) {
                     return GestureDetector(
                       onTap: () => updateSelectedImage(imageUrl),
                       child: Padding(

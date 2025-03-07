@@ -10,6 +10,7 @@ class myassets extends ChangeNotifier {
   String? CurrentUserid;
   String? AssetName;
   String? AssetType;
+  String? AssetHandler;
   String? AssetWorth;
   String? KinsMan;
   String? location;
@@ -22,6 +23,7 @@ class myassets extends ChangeNotifier {
     this.CurrentUserid,
     this.AssetName,
     this.AssetType,
+    this.AssetHandler,
     this.AssetWorth,
     this.KinsMan,
     this.location,
@@ -37,6 +39,7 @@ class myassets extends ChangeNotifier {
       AssetName: map['AssetName'],
       location: map["location"],
       AssetType: map["AssetType"],
+      AssetHandler: map["AssetHandler"],
       AssetWorth: map["AssetWorth"].toString(),
       Tenure: map["Tenure"],
       AssetImages: (map["AssetImages"] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
