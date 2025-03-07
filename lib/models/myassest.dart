@@ -14,7 +14,7 @@ class myassets extends ChangeNotifier {
   String? KinsMan;
   String? location;
   String? Tenure;
-  String? AssetImages;
+  List<String>? AssetImages;
   String? notifications ;
 
   myassets({
@@ -39,7 +39,9 @@ class myassets extends ChangeNotifier {
       AssetType: map["AssetType"],
       AssetWorth: map["AssetWorth"].toString(),
       Tenure: map["Tenure"],
-      AssetImages: map["AssetImages"][0].toString(),
+      AssetImages: (map["AssetImages"] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+
+      // AssetImages: map["AssetImages"][0].toString(),
       KinsMan: map["KinsMan"],
       notifications: map["Notification"].toString(),
     );
