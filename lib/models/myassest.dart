@@ -39,7 +39,7 @@ class myassets extends ChangeNotifier {
       AssetName: map['AssetName'],
       location: map["location"],
       AssetType: map["AssetType"],
-      AssetHandler: map["AssetHandler"],
+      AssetHandler: map["AssetHandler"].toString(),
       AssetWorth: map["AssetWorth"].toString(),
       Tenure: map["Tenure"],
       AssetImages: (map["AssetImages"] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
