@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import '../Assistants/assistantMethods.dart';
 import '../models/clientuser.dart';
 import '../widget/mycards.dart';
+import '../widget/themeprovider.dart';
 import 'AccountDetails.dart';
 
 class homepage extends StatefulWidget {
@@ -50,314 +51,178 @@ class _homepageState extends State<homepage> {
   @override
   Widget build(BuildContext context) {
     final clientprovider = Provider.of<clientusers>(context).userInfo;
-    final Size size = MediaQuery.of(context).size;
+    final size = MediaQuery.of(context).size;
+    final theme = Theme.of(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
 
-    List<Widget> _widgetOptions = <Widget>[
-      Column(
-        children: [
-          Row(
-            children: [
-              Column(
-                children: [
-                  Row(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 2.0, left: 22),
-                        child: Text(
-                          '${_getSalutation()}',
-                          style: TextStyle(fontSize: 15, color: Colors.black26),
-                        ),
-                      ),
-                    ],
-                  )
-                ],
-              ),
-            ],
-          ),
-          SizedBox(height: 4),
-          Padding(
-            padding: const EdgeInsets.only(top: 8.0),
-            child: Container(
-              height: 120,
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: Colors.black, // Set border color to black
-                  width: 4.0, // Set border thickness
-                ),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.only(top: 13.0, left: 8),
-                        child: Text('Welcome!', style: TextStyle(fontSize: 20)),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 1.0, left: 8),
-                        child: Text(
-                          'Build Your Dossier!',
-                          style: TextStyle(fontSize: 18, color: Colors.black54),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 94, child: Image.asset(Cards.kcard4)),
-                ],
-              ),
-              width: MediaQuery.of(context).size.width,
-              padding: EdgeInsets.all(8.0),
-            ),
-          ),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                MyCard(),
-                ViewAssetsCard(),
-              ],
-            ),
-          ),
-          SizedBox(height: 13),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Container(
-              height: 190,
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: Colors.black,
-                  width: 4.0,
-                ),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 1.0, left: 8),
-                        child: Text(
-                          'Build Your Dossier!',
-                          style: TextStyle(fontSize: 18, color: Colors.black54),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 94, child: Image.asset(Cards.kcard4)),
-                ],
-              ),
-              width: MediaQuery.of(context).size.width,
-              padding: EdgeInsets.all(8.0),
-            ),
-          ),
-        ],
-      ),
-      // Add more widgets for different tabs
-      // Center(child: Text('Restaurant Menu')),
-      // Center(child: Text('Bookmark')),
-      // Center(child: Text('Notifications',style: TextStyle(color: Colors.black),)),
-    ];
     return Scaffold(
       appBar: AppBar(
         title: Text(
           "DOSSIER.",
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        actions: [
+          Switch(
+            value: themeProvider.isDarkMode,
+            onChanged: (value) {
+              themeProvider.toggleTheme(value);
+            },
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            _buildGreetingSection(clientprovider, theme),
+            _buildWelcomeCard(size, theme),
+            _buildHorizontalScrollCards(),
+            SizedBox(height: 20),
+            _buildUpcomingEventsCard(size, theme),
+          ],
         ),
       ),
-      body: Container(
-        child: SingleChildScrollView(
-          child: Column(children: [
-            Row(children: [
-              Column(
+    );
+  }
+
+  Widget _buildGreetingSection(clientusers? clientProvider, ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'Hi ${clientProvider?.username ?? ""}!',
+                style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          Text(
+            _getSalutation(),
+            style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.7)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWelcomeCard(Size size, ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.all(18.0),
+      child: Container(
+        width: size.width,
+        height: 120,
+        decoration: BoxDecoration(
+          border: Border.all(color: theme.colorScheme.onSurface, width: 4.0),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        padding: EdgeInsets.all(8.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0,left: 8.0,bottom: 4),
+                  child: Text('Welcome!', style: theme.textTheme.titleLarge),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 1.0,left: 8,right: 8.0),
+                  child: Text('Build Your Dossier!', style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.7))),
+                ),
+              ],
+            ),
+            Image.asset(Cards.kcard4, height: 94),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHorizontalScrollCards() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          MyCard(),
+          ViewAssetsCard(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUpcomingEventsCard(Size size, ThemeData theme) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Container(
+        width: size.width,
+        height: 211,
+        decoration: BoxDecoration(
+          border: Border.all(color: theme.colorScheme.onSurface, width: 4.0),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        padding: EdgeInsets.all(8.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              flex: 2,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 18.0, left: 18),
-                    child: Text('Hi ' + '${clientprovider?.username ?? ""}!',
-                        style: TextStyle(
-                            fontSize: 25, fontWeight: FontWeight.bold)),
-                  ),
-                  Row(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 2.0, left: 22),
-                        child: Text('${_getSalutation()}',
-                            style:
-                                TextStyle(fontSize: 15, color: Colors.black26)),
+                  Text('Upcoming Events!', style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.7))),
+                  SizedBox(height: 10),
+                  Expanded(
+                    child: GridView.builder(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3,
+                        crossAxisSpacing: 10.0,
+                        mainAxisSpacing: 6.0,
                       ),
-                    ],
-                  )
+                      itemCount: icons.length,
+                      itemBuilder: (context, index) {
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => DetailPage(
+                                  title: icons[index]['title']!,
+                                  contentBuilder: icons[index]['contentBuilder'],
+                                ),
+                              ),
+                            );
+                          },
+                          child: Column(
+                            children: [
+                              CircleAvatar(
+                                backgroundColor: themeProvider.isDarkMode ? Colors.amber : Colors.amber,
+                                child: Icon(icons[index]['icon'], size: 25, color: themeProvider.isDarkMode ? Colors.black : Colors.black54),
+                              ),
+                              Text(
+                                icons[index]['title'],
+                                style: theme.textTheme.bodyMedium,
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                 ],
               ),
-            ]),
-            SizedBox(
-              height: 26,
             ),
-            Padding(
-              padding: const EdgeInsets.all(18.0),
-              child: Container(
-                height: 120,
-                decoration: BoxDecoration(
-                    border: Border.all(
-                      color: Colors.black, // Set border color to black
-                      width: 4.0, // Set border thickness
-                    ),
-                    borderRadius: BorderRadius.circular(20)),
-                // Set the background color to black
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.only(top: 18.0, left: 1),
-                            child: Text('Welcome!',
-                                style: TextStyle(fontSize: 20)),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 1.0, left: 8),
-                            child: Text('Build Your Dossier!',
-                                style: TextStyle(
-                                    fontSize: 18, color: Colors.black54)),
-                          ),
-                        ],
-                      ),
-
-                      SizedBox(height: 94, child: Image.asset(Cards.kcard4)),
-
-                      // Add your children widgets here
-                    ],
-                  ),
-                ),
-                width: MediaQuery.of(context).size.width,
-                // Set the width to match the screen size
-                padding: EdgeInsets.all(
-                    8.0), // Optional: Add padding to the container
-              ),
+            Expanded(
+              flex: 1,
+              child: Image.asset(Cards.kcard4, fit: BoxFit.cover),
             ),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    MyCard(),
-                    ViewAssetsCard(),
-                  ]),
-            ),
-            SizedBox(
-              height: 23,
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Container(
-                height: 211,
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Colors.black, // Set border color to black
-                    width: 4.0, // Set border thickness
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                width: MediaQuery.of(context).size.width,
-                // Match the screen width
-                padding: EdgeInsets.all(8.0),
-                // Add padding to the container
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Left Column
-                    Flexible(
-                      flex: 2,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(top: 1.0, left: 8),
-                            child: Text(
-                              'Upcoming Events!',
-                              style: TextStyle(
-                                  fontSize: 15, color: Colors.black54),
-                            ),
-                          ),
-                          SizedBox(height: 10), // Spacing
-                          Expanded(
-                            child: GridView.builder(
-                              gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 3,
-                                crossAxisSpacing: 10.0,
-                                mainAxisSpacing: 6.0,
-                              ),
-                              itemCount: icons.length,
-                              itemBuilder: (context, index) {
-                                return GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => DetailPage(
-                                          title: icons[index]['title']!,
-                                          contentBuilder: icons[index]
-                                              ['contentBuilder'],
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  child: Column(
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: CircleAvatar(
-                                          backgroundColor: Colors.amber,
-                                          child: Icon(
-                                            icons[index]['icon'],
-                                            size: 25,
-                                            color: Colors.black,
-                                          ),
-                                        ),
-                                      ),
-                                      Text(
-                                        icons[index]['title'],
-                                        // Fixed to correctly access the title
-                                        style: TextStyle(fontSize: 12),
-                                        // Smaller font size for the text
-                                        textAlign: TextAlign.center,
-                                      )
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Right Image
-                    Flexible(
-                      flex: 1,
-                      child: SizedBox(
-                        height: 94,
-                        // Ensure the image fits within the layout
-                        child: Image.asset(Cards.kcard4, fit: BoxFit.cover),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ]),
+          ],
         ),
       ),
     );

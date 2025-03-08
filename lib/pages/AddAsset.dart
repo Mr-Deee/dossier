@@ -6,7 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart'; // Ensure you have provider set up
+import 'package:provider/provider.dart';
+
+import '../widget/themeprovider.dart'; // Ensure you have provider set up
 
 
 
@@ -51,8 +53,11 @@ class _AddAssetState extends State<AddAsset> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: themeProvider.isDarkMode ? Colors.black : Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
