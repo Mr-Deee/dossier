@@ -4,6 +4,7 @@ import 'package:dossier/pages/login.dart';
 import 'package:dossier/pages/mainscreen.dart';
 import 'package:dossier/pages/onboarding/onboarding.dart';
 import 'package:dossier/pages/register.dart';
+import 'package:dossier/widget/themeprovider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -24,6 +25,7 @@ void main() async{
       MultiProvider(providers: [
         ChangeNotifierProvider<clientusers>(create: (context) => clientusers(),),
         ChangeNotifierProvider<myassets>(create: (context) => myassets(),),
+        ChangeNotifierProvider<ThemeProvider>(create: (context) =>  ThemeProvider(),),
         // ChangeNotifierProvider<clientusers>(create: (context) => clientusers(),),
 
       ],
@@ -42,14 +44,15 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     final screenHeight = MediaQuery.of(context).size.height;
     return MaterialApp(
       title: 'The Dossier.',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
+        theme: ThemeData.light(),
+        darkTheme: ThemeData.dark(),
+        themeMode: themeProvider.themeMode, // Apply theme mode
 
         initialRoute: FirebaseAuth.instance.currentUser == null
             ? '/login'
