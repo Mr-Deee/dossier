@@ -54,6 +54,8 @@ class myassets extends ChangeNotifier {
     notifyListeners();
   }
 
+
+
   // Function to schedule notification to next of kin
   void scheduleNotificationToNextOfKin(BuildContext context) {
     // Criteria: Only send notification if asset worth is greater than a threshold (e.g., 10000)
