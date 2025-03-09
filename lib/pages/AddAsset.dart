@@ -419,44 +419,43 @@ class _AddAssetState extends State<AddAsset> {
   }
 
   void addAsset() async {
-    // Validate Notification Fields
-    if (selectedDate == null ||
-        selectedTime == null ||
-        selectedProtocol == null ||
-        selectedInterval == null) {
+    if (selectedDate == null || selectedTime == null || selectedProtocol == null || selectedInterval == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Please complete the notification schedule')),
       );
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
-      // Upload images to Firebase Storage
-      List<Future<void>> uploadFutures = _images.map((imageFile) async {
-        if (imageFile != null) {
-          final storageRef = FirebaseStorage.instance.ref().child(
-            'asset_images/${DateTime.now().millisecondsSinceEpoch}.jpg',
-          );
-          await storageRef.putFile(imageFile);
-          final downloadURL = await storageRef.getDownloadURL();
-          _imageUrls.add(downloadURL);
-        }
-      }).toList();
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw Exception('User not logged in');
 
-      await Future.wait(uploadFutures); // Wait for all uploads to complete
-
-      // Add asset data to Firebase Database
-      final userId = FirebaseAuth.instance.currentUser?.uid;
-      final email = FirebaseAuth.instance.currentUser?.email;
+      final userId = user.uid;
+      final email = user.email;
       final assetRef = _database.child('Assets').push();
+      final notificationRef = _database.child('Notifications').push();
+
+      // **1. Upload images concurrently with controlled concurrency**
+      final List<Future<String>> uploadTasks = _images
+          .where((image) => image != null)
+          .map((imageFile) async {
+        final storageRef = FirebaseStorage.instance.ref().child(
+          'asset_images/${DateTime.now().millisecondsSinceEpoch}.jpg',
+        );
+        final uploadTask = storageRef.putFile(imageFile!);
+        return uploadTask.then((task) => task.ref.getDownloadURL());
+      })
+          .toList();
+
+      // Start uploading images while preparing data
+      final Future<List<String>> imageUploadFuture = Future.wait(uploadTasks);
+
+      // **2. Prepare asset and notification data**
       final assetData = {
         'uid': userId,
         'email': email,
-        'AssetImages': _imageUrls,
         'AssetName': modelname.text,
         'CurrentUser': userId,
         'KinsMan': kinsmanname.text,
@@ -467,18 +466,8 @@ class _AddAssetState extends State<AddAsset> {
         'Location': location.text,
         'AssetHandler': assethandler.text,
         'AssetWorth': double.tryParse(price.text) ?? 0.0,
-        'Notification': {
-          'notificationId': assetRef.key, // Notification reference key
-          'protocol': selectedProtocol,  // Protocol selected by the user
-          'interval': selectedInterval,  // Interval for notification (daily, weekly, etc.)
-          'scheduledDate': DateFormat('yMMMd').format(selectedDate!), // Scheduled date
-          'scheduledTime': selectedTime!.format(context),             // Scheduled time
-        },
       };
-      await assetRef.set(assetData);
 
-      // Schedule Notification
-      final notificationRef = _database.child('Notifications').push();
       final notificationData = {
         'assetId': assetRef.key,
         'protocol': selectedProtocol,
@@ -487,24 +476,26 @@ class _AddAssetState extends State<AddAsset> {
         'scheduledTime': selectedTime!.format(context),
         'NotificationID': notificationRef.key,
       };
-      await notificationRef.set(notificationData);
 
-      // Reset loading state and show success message
-      setState(() {
-        _isLoading = false;
+      // **3. Upload images & write data in parallel**
+      final List<String> imageUrls = await imageUploadFuture; // Get image URLs
+      assetData['AssetImages'] = imageUrls; // Attach images
+
+      await _database.update({
+        '/Assets/${assetRef.key}': assetData,
+        '/Notifications/${notificationRef.key}': notificationData,
       });
 
+      // **4. Completion**
       _showCustomSnackBar('Asset added successfully!');
-      _clearFields(); // Clear input fields
+      _clearFields();
     } catch (error) {
       print('Error adding asset: $error');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to add asset. Please try again.')),
       );
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
   }
 
