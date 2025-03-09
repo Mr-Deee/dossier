@@ -285,6 +285,7 @@ class _LoginPageState extends State<LoginPage> {
       if (Clientsdb != null) {
         AssistantMethods.getCurrentOnlineUserInfo(context);
 
+
         Navigator.of(context).pushNamed("/main");
 
         displayToast("Logged-in ", context);
