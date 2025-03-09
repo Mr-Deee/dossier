@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 
 import '../widget/themeprovider.dart'; // Ensure you have provider set up
@@ -72,7 +73,13 @@ class _AddAssetState extends State<AddAsset> {
         ),
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? Center(
+        child: Lottie.asset(
+          'assets/animations/loading.json',
+          width: 120,
+          height: 120,
+        ),
+      )
           : Stepper(
         currentStep: _currentStep,
         onStepContinue: _nextStep,
@@ -459,7 +466,7 @@ class _AddAssetState extends State<AddAsset> {
         'AssetName': modelname.text,
         'CurrentUser': userId,
         'KinsMan': kinsmanname.text,
-        'AssetType': type.text,
+        'AssetType': selectedAssetType,
         'ContactofTrustworthy': contactoft.text,
         'NameofTrustworthy': nameofT.text,
         'Tenure': tenure.text,

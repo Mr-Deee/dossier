@@ -501,70 +501,6 @@ class _HomeContentState extends State<HomeContent> {
   }
 
 
-  // Widget buildBalanceCard(Map<dynamic, dynamic> account) {
-  //   return Padding(
-  //     padding: const EdgeInsets.all(8.0),
-  //     child: Container(
-  //       width: 383,
-  //
-  //       decoration: BoxDecoration(
-  //         boxShadow: [
-  //           BoxShadow(
-  //             color: Colors.black26,
-  //             offset: Offset(2, 2),
-  //             blurRadius: 2,
-  //           ),
-  //         ],
-  //         color: Colors.amber,
-  //         borderRadius: BorderRadius.circular(16),
-  //       ),
-  //       padding: EdgeInsets.all(20),
-  //       child: Column(
-  //         crossAxisAlignment: CrossAxisAlignment.start,
-  //         children: [
-  //           Text(
-  //             '\$${account["balance"] ?? "0.00"}',
-  //             style: TextStyle(color: Colors.black, fontSize: 24),
-  //           ),
-  //           SizedBox(height: 10),
-  //           Text(
-  //             'Account: ${account["accountName"] ?? "Unknown"}',
-  //             style: TextStyle(color: Colors.black54, fontSize: 16),
-  //           ),
-  //           SizedBox(height: 10),
-  //           Row(
-  //             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //             children: [
-  //               Text(
-  //                 '**** ${account["accountNumber"] ?? "XXXX"}',
-  //                 style: TextStyle(color: Colors.black54),
-  //               ),
-  //               Text(
-  //                 'Exp ${account["expiry"] ?? "N/A"}',
-  //                 style: TextStyle(color: Colors.black54),
-  //               ),
-  //             ],
-  //           ),
-  //           SizedBox(height: 19),
-  //           Row(
-  //             mainAxisAlignment: MainAxisAlignment.end,
-  //             children: [
-  //               ElevatedButton(
-  //                 onPressed: () {
-  //
-  //                 },
-  //                 style: ElevatedButton.styleFrom(
-  //                   backgroundColor: Colors.black,
-  //                 ),
-  //                 child: Text('View Account', style: TextStyle(color: Colors.white)),
-  //               ),
-  //             ],
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
 
   void _showAddAccountDialog() {
     TextEditingController accountNameController = TextEditingController();
@@ -944,6 +880,14 @@ class _LegacyPageState extends State<LegacyPage> {
                   ),
                 ],
               ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => LegacyDetailsScreen(legacy: legacy),
+                  ),
+                );
+              },
               trailing: IconButton(
                 icon: const Icon(Icons.delete, color: Colors.red),
                 onPressed: () => _deleteLegacy(legacy["key"]),
@@ -955,6 +899,46 @@ class _LegacyPageState extends State<LegacyPage> {
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddLegacyModal,
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+
+
+
+class LegacyDetailsScreen extends StatelessWidget {
+  final Map<String, dynamic> legacy;
+
+  const LegacyDetailsScreen({Key? key, required this.legacy}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(legacy["title"]),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Details:",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 8),
+            Text(
+              legacy["details"],
+              style: TextStyle(fontSize: 16),
+            ),
+            SizedBox(height: 16),
+            Text(
+              "Timeline: ${legacy["timeline"]}",
+              style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
+            ),
+          ],
+        ),
       ),
     );
   }

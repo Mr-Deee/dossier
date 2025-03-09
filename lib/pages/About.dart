@@ -123,23 +123,23 @@ class _AboutState extends State<About> {
                 const SizedBox(height: 20),
 
                 // // Call to Action Button
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pushNamed("/bank");
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 30, vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: const Text(
-                    'BANK PORTAL',
-                    style: TextStyle(fontSize: 18, color: Colors.white),
-                  ),
-                ),
+                // ElevatedButton(
+                //   onPressed: () {
+                //     Navigator.of(context).pushNamed("/bank");
+                //   },
+                //   style: ElevatedButton.styleFrom(
+                //     backgroundColor: Colors.black,
+                //     padding: const EdgeInsets.symmetric(
+                //         horizontal: 30, vertical: 15),
+                //     shape: RoundedRectangleBorder(
+                //       borderRadius: BorderRadius.circular(10),
+                //     ),
+                //   ),
+                //   child: const Text(
+                //     'BANK PORTAL',
+                //     style: TextStyle(fontSize: 18, color: Colors.white),
+                //   ),
+                // ),
                 const SizedBox(height: 20),
 
                 // Footer with Privacy Policy
