@@ -15,7 +15,7 @@ import '../models/myassest.dart';
 
 class AssistantMethods {
 
-  static void getCurrentOnlineUserInfo(BuildContext context) async {
+  static  getCurrentOnlineUserInfo(BuildContext context) async {
     print('assistant methods step 3:: get current online user info');
     firebaseUser =
         FirebaseAuth.instance.currentUser; // CALL FIREBASE AUTH INSTANCE

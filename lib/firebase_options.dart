@@ -41,48 +41,56 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCFLp3YjEdMfI_r2JkcCj7UzhLI1bR80I0',
-    appId: '1:568450203907:web:346ebdd5bc892cf7fba936',
+    apiKey: 'AIzaSyDXan4DaEN_cdJlOB-xEYxGorPiTNsEUVA',
+    appId: '1:568450203907:web:74170b788683de01fba936',
     messagingSenderId: '568450203907',
     projectId: 'dossier-a8fe7',
     authDomain: 'dossier-a8fe7.firebaseapp.com',
+    databaseURL: 'https://dossier-a8fe7-default-rtdb.firebaseio.com',
     storageBucket: 'dossier-a8fe7.appspot.com',
-    measurementId: 'G-6JCM9D1BYQ',
+    measurementId: 'G-0EHEXZMPPE',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyCgIMq88WSqBOpcmgFZbSgjBe9xUx-7jWk',
-    appId: '1:568450203907:android:24a1400f29de7a7bfba936',
+    appId: '1:568450203907:android:43433544607394f5fba936',
     messagingSenderId: '568450203907',
     projectId: 'dossier-a8fe7',
+    databaseURL: 'https://dossier-a8fe7-default-rtdb.firebaseio.com',
     storageBucket: 'dossier-a8fe7.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyBLhc1zvpaNRCscIrRO67iPLC8ba2E-CCk',
-    appId: '1:568450203907:ios:861174aa67d25098fba936',
+    appId: '1:568450203907:ios:58f00169bb6254f1fba936',
     messagingSenderId: '568450203907',
     projectId: 'dossier-a8fe7',
+    databaseURL: 'https://dossier-a8fe7-default-rtdb.firebaseio.com',
     storageBucket: 'dossier-a8fe7.appspot.com',
+    iosClientId: '568450203907-c3cr8a49ifnu9pm0g2g542sq21m1eks3.apps.googleusercontent.com',
     iosBundleId: 'com.malcolm.dossier',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyBLhc1zvpaNRCscIrRO67iPLC8ba2E-CCk',
-    appId: '1:568450203907:ios:861174aa67d25098fba936',
+    appId: '1:568450203907:ios:58f00169bb6254f1fba936',
     messagingSenderId: '568450203907',
     projectId: 'dossier-a8fe7',
+    databaseURL: 'https://dossier-a8fe7-default-rtdb.firebaseio.com',
     storageBucket: 'dossier-a8fe7.appspot.com',
+    iosClientId: '568450203907-c3cr8a49ifnu9pm0g2g542sq21m1eks3.apps.googleusercontent.com',
     iosBundleId: 'com.malcolm.dossier',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyCFLp3YjEdMfI_r2JkcCj7UzhLI1bR80I0',
-    appId: '1:568450203907:web:52f2057eda0075f1fba936',
+    apiKey: 'AIzaSyDXan4DaEN_cdJlOB-xEYxGorPiTNsEUVA',
+    appId: '1:568450203907:web:0ac653f390c9f3eafba936',
     messagingSenderId: '568450203907',
     projectId: 'dossier-a8fe7',
     authDomain: 'dossier-a8fe7.firebaseapp.com',
+    databaseURL: 'https://dossier-a8fe7-default-rtdb.firebaseio.com',
     storageBucket: 'dossier-a8fe7.appspot.com',
-    measurementId: 'G-H055566373',
+    measurementId: 'G-4JYM1J762H',
   );
+
 }

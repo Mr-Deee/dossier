@@ -1,13 +1,14 @@
 {
   "project_info": {
     "project_number": "568450203907",
+    "firebase_url": "https://dossier-a8fe7-default-rtdb.firebaseio.com",
     "project_id": "dossier-a8fe7",
     "storage_bucket": "dossier-a8fe7.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:568450203907:android:24a1400f29de7a7bfba936",
+        "mobilesdk_app_id": "1:568450203907:android:43433544607394f5fba936",
         "android_client_info": {
           "package_name": "com.malcolm.dossier"
         }

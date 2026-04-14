@@ -10,8 +10,8 @@ import '../main.dart';
 import '../widget/progressdialog.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key,  this.title}) : super(key: key);
-  final String ?title;
+  const LoginPage({Key? key, this.title}) : super(key: key);
+  final String? title;
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -24,6 +24,19 @@ class _LoginPageState extends State<LoginPage> {
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+
+  bool _isLoading = false;
+  bool _isNavigating = false;
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -35,7 +48,6 @@ class _LoginPageState extends State<LoginPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
-
               const SizedBox(
                 height: 110,
               ),
@@ -50,29 +62,23 @@ class _LoginPageState extends State<LoginPage> {
                 height: 90,
               ),
               Container(
-          
                 child: Form(
                   key: _formKey,
                   child: Container(
-          
                     decoration: BoxDecoration(
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.white,
-                          spreadRadius: 5,
-                          blurRadius: 7,
-                          offset: Offset(0, 3), // changes position of shadow
-                        ),
-                      ],
-          
-                      color: Colors.white54,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.white,
+                            spreadRadius: 5,
+                            blurRadius: 7,
+                            offset: Offset(0, 3),
+                          ),
+                        ],
+                        color: Colors.white54,
                         borderRadius: BorderRadius.circular(30)
-          
                     ),
-          
                     child: Column(
                       children: [
-          
                         const SizedBox(
                           height: 10,
                         ),
@@ -85,59 +91,52 @@ class _LoginPageState extends State<LoginPage> {
                                     color: Colors.grey.withOpacity(0.5),
                                     spreadRadius: 5,
                                     blurRadius: 7,
-                                    offset: Offset(0, 3), // changes position of shadow
+                                    offset: Offset(0, 3),
                                   ),
                                 ],
-          
                                 color: Colors.white54,
                                 borderRadius: BorderRadius.circular(30)
-          
                             ),
                             child: TextFormField(
-                                validator: (value) => EmailValidator.validate(value!)
-                                    ? null
-                                    : "Please enter a valid email",
-                                maxLines: 1,
-                                controller: _emailController,
-                                decoration: InputDecoration(
-          
-                                  hintText: 'Enter your email',
-                                  prefixIcon: Container(
+                              validator: (value) => EmailValidator.validate(value!)
+                                  ? null
+                                  : "Please enter a valid email",
+                              maxLines: 1,
+                              controller: _emailController,
+                              decoration: InputDecoration(
+                                hintText: 'Enter your email',
+                                prefixIcon: Container(
                                     height: 60,
-                                      width: 60,
-                                      decoration: BoxDecoration(
+                                    width: 60,
+                                    decoration: BoxDecoration(
                                         color: Colors.white,
                                         borderRadius: BorderRadius.circular(100)
-                                      ),
-                                      child: const Icon(Icons.email)),
-                                  contentPadding: EdgeInsets.symmetric(vertical: 16.0,horizontal: 16), // Adjust vertical padding
-          
-                                  border: InputBorder.none,
+                                    ),
+                                    child: const Icon(Icons.email)
                                 ),
+                                contentPadding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 16),
+                                border: InputBorder.none,
                               ),
+                            ),
                           ),
                         ),
-          
                         const SizedBox(
                           height: 20,
                         ),
                         Padding(
                           padding: const EdgeInsets.all(18.0),
                           child: Container(
-          
                             decoration: BoxDecoration(
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.grey.withOpacity(0.5),
                                     spreadRadius: 5,
                                     blurRadius: 7,
-                                    offset: Offset(0, 3), // changes position of shadow
+                                    offset: Offset(0, 3),
                                   ),
                                 ],
-          
                                 color: Colors.white54,
                                 borderRadius: BorderRadius.circular(30)
-          
                             ),
                             child: TextFormField(
                               validator: (value) {
@@ -150,25 +149,24 @@ class _LoginPageState extends State<LoginPage> {
                               maxLines: 1,
                               obscureText: true,
                               decoration: InputDecoration(
-                                suffixIcon:  Container(
+                                suffixIcon: Container(
                                     height: 60,
                                     width: 60,
                                     decoration: BoxDecoration(
                                         color: Colors.white,
                                         borderRadius: BorderRadius.circular(100)
                                     ),
-          
-                                    child: Icon(Icons.lock)),
+                                    child: Icon(Icons.lock)
+                                ),
                                 hintText: 'Enter your password',
-                                contentPadding: EdgeInsets.symmetric(vertical: 16.0,horizontal: 16), // Adjust vertical padding
-                                border: InputBorder.none, // Removes the underline
-                                // ),
+                                contentPadding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 16),
+                                border: InputBorder.none,
                               ),
                             ),
                           ),
                         ),
                         Padding(
-                          padding: const EdgeInsets.only(left:18.0),
+                          padding: const EdgeInsets.only(left: 18.0),
                           child: CheckboxListTile(
                             title: const Text("Remember me"),
                             contentPadding: EdgeInsets.zero,
@@ -186,23 +184,25 @@ class _LoginPageState extends State<LoginPage> {
                           height: 10,
                         ),
                         ElevatedButton(
-                          onPressed: () {
+                          onPressed: (_isLoading || _isNavigating) ? null : () {
                             if (_formKey.currentState!.validate()) {
-                              loginAndAuthenticateUser(context);
-                              // Navigator.push(
-                              //   context,
-                              //   MaterialPageRoute(
-                              //     builder: (context) =>
-                              //         homepage(),
-                              //   ),
-                              // );
+                              _loginAndAuthenticateUser();
                             }
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.black54,
                             padding: const EdgeInsets.fromLTRB(40, 15, 40, 15),
                           ),
-                          child: const Text(
+                          child: _isLoading
+                              ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                              : const Text(
                             'Sign in',
                             style: TextStyle(
                               color: Colors.white,
@@ -219,13 +219,15 @@ class _LoginPageState extends State<LoginPage> {
                             const Text('Not registered yet?'),
                             TextButton(
                               onPressed: () {
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        const RegisterPage(title: 'Register UI'),
-                                  ),
-                                );
+                                if (!_isNavigating) {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                      const RegisterPage(title: 'Register UI'),
+                                    ),
+                                  );
+                                }
                               },
                               child: const Text('Create an account'),
                             ),
@@ -243,64 +245,104 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  void _loginAndAuthenticateUser() async {
+    // Prevent multiple login attempts
+    if (_isLoading || _isNavigating) return;
 
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+    // Set loading state
+    setState(() {
+      _isLoading = true;
+    });
 
-  void loginAndAuthenticateUser(BuildContext context) async {
-    showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return ProgressDialog(
-            message: "Logging you ,Please wait.",
-          );
+    String email = _emailController.text.trim();
+    String password = _passwordController.text.trim();
+
+    // Validate inputs
+    if (email.isEmpty || password.isEmpty) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        _displayToast("Please enter email and password");
+      }
+      return;
+    }
+
+    try {
+      UserCredential userCredential = await _firebaseAuth
+          .signInWithEmailAndPassword(email: email, password: password);
+
+      // Check if widget is still mounted before proceeding
+      if (!mounted) return;
+
+      // Get user info
+      await AssistantMethods.getCurrentOnlineUserInfo(context);
+
+      // Mark that we're navigating to prevent any further UI updates
+      if (mounted) {
+        setState(() {
+          _isNavigating = true;
         });
 
-    Future signInWithEmailAndPassword(String email, String password) async {
-      try {
-        UserCredential result = await _firebaseAuth.signInWithEmailAndPassword(
-            email: _emailController.text.trim(), password: _passwordController.text.trim());
-        User? user = result.user;
-        return _firebaseAuth;
-      } catch (error) {
-        print(error.toString());
-        return null;
+        // Use a delayed navigation to ensure all UI updates are complete
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        if (mounted) {
+          // Clear all routes and navigate to homepage
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => homepage()),
+                (Route<dynamic> route) => false,
+          );
+          _displayToast("Logged in successfully");
+        }
       }
-    }
 
-    final User? firebaseUser = (await _firebaseAuth
-        .signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim())
-        .catchError((errMsg) {
-      Navigator.pop(context);
-      displayToast("Error" + errMsg.toString(), context);
-    }))
-        .user;
-    try {
-      UserCredential userCredential =
-      await _firebaseAuth.signInWithEmailAndPassword(
-          email: _emailController.text.trim(), password: _passwordController.text.trim());
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
 
-      if (Clientsdb != null) {
-        AssistantMethods.getCurrentOnlineUserInfo(context);
-
-
-        Navigator.of(context).pushNamed("/main");
-
-        displayToast("Logged-in ", context);
-      } else {
-        displayToast("Error: Cannot be signed in", context);
+      // Handle specific Firebase errors
+      String errorMessage;
+      switch (e.code) {
+        case 'user-not-found':
+          errorMessage = "No user found with this email";
+          break;
+        case 'wrong-password':
+          errorMessage = "Wrong password provided";
+          break;
+        case 'invalid-email':
+          errorMessage = "Invalid email format";
+          break;
+        case 'user-disabled':
+          errorMessage = "This user has been disabled";
+          break;
+        case 'too-many-requests':
+          errorMessage = "Too many requests. Try again later";
+          break;
+        case 'network-request-failed':
+          errorMessage = "Network error. Check your internet connection";
+          break;
+        default:
+          errorMessage = "Login failed: ${e.message}";
       }
+
+      _displayToast(errorMessage);
+      print("Firebase auth error: ${e.code} - ${e.message}");
+
     } catch (e) {
-      // handle error
+      if (!mounted) return;
+      _displayToast("Error: ${e.toString()}");
+      print("Login error: ${e.toString()}");
+    } finally {
+      // Reset loading state only if not navigating
+      if (mounted && !_isNavigating) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
-  displayToast(String message, BuildContext context) {
+  void _displayToast(String message) {
     Fluttertoast.showToast(msg: message);
-
-
   }
-
 }
