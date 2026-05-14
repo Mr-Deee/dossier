@@ -1,4 +1,5 @@
-// lib/main_pages/homepage.dart
+// lib/main_pages/homepage.dart - Updated HomeContent without Dossier Summary
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -23,6 +24,13 @@ class _homepageState extends State<homepage> {
   int _selectedIndex = 0;
   String _userName = "";
 
+  final List<Widget> _pages = [
+     HomeContent(),
+     AssetInventoryPage(),
+     LegacyJournalPage(),
+     TrustedContactsPage(),
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -38,20 +46,6 @@ class _homepageState extends State<homepage> {
       }
     }
   }
-
-  String _getSalutation() {
-    var hour = DateTime.now().hour;
-    if (hour < 12) return 'Good Morning';
-    if (hour < 18) return 'Good Afternoon';
-    return 'Good Evening';
-  }
-
-  final List<Widget> _pages = [
-    HomeContent(),
-    AssetInventoryPage(),
-    LegacyJournalPage(),
-    TrustedContactsPage(),
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -69,68 +63,223 @@ class _homepageState extends State<homepage> {
             value: themeProvider.isDarkMode,
             onChanged: (value) => themeProvider.toggleTheme(value),
           ),
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: () async {
-              await FirebaseAuth.instance.signOut();
-              Navigator.pushReplacementNamed(context, '/login');
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'logout') {
+                _logout();
+              } else if (value == 'settings') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) =>  SettingsPage()),
+                );
+              } else if (value == 'contact') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) =>  ContactUsPage()),
+                );
+              }
             },
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'settings', child: ListTile(leading: Icon(Icons.settings), title: Text("Settings"))),
+              const PopupMenuItem(value: 'contact', child: ListTile(leading: Icon(Icons.contact_support), title: Text("Contact Us"))),
+              const PopupMenuItem(value: 'logout', child: ListTile(leading: Icon(Icons.logout), title: Text("Logout"))),
+            ],
           ),
         ],
       ),
       body: _pages[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) => setState(() => _selectedIndex = index),
-        type: BottomNavigationBarType.fixed,
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.inventory_2), label: 'Assets'),
-          BottomNavigationBarItem(icon: Icon(Icons.book), label: 'Legacy'),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Contacts'),
-        ],
-      ),
     );
+  }
+
+  Future<void> _logout() async {
+    await FirebaseAuth.instance.signOut();
+    if (mounted) {
+      Navigator.pushReplacementNamed(context, '/login');
+    }
   }
 }
 
-// Home Content Widget
+// Home Content Widget - This is the overview/dashboard
 class HomeContent extends StatefulWidget {
+  const HomeContent({super.key});
+
   @override
-  _HomeContentState createState() => _HomeContentState();
+  State<HomeContent> createState() => _HomeContentState();
 }
 
 class _HomeContentState extends State<HomeContent> {
   String _userName = "";
   int _pendingRequests = 0;
+  int _totalAssets = 0;
+  int _totalLegacyEntries = 0;
+  int _totalContacts = 0;
+  int _totalDocuments = 0;
+  bool _isLoading = true;
+
+  // Dynamic Island / Carousel variables
+  late PageController _pageController;
+  int _currentPage = 0;
+  Timer? _carouselTimer;
+
+  // Carousel items
+  final List<CarouselItem> _carouselItems = [
+    CarouselItem(
+      icon: Icons.warning_amber_rounded,
+      title: "⚠️ LEGAL NOTICE",
+      message: "DOSSIER is an information storage tool only. Not a legal will. Access requires death certificate verification.",
+      color: Colors.amber,
+    ),
+    CarouselItem(
+      icon: Icons.security,
+      title: "🔒 YOUR DATA IS SAFE",
+      message: "All your information is encrypted and stored securely. Only you can grant access to trusted contacts.",
+      color: Colors.green,
+    ),
+    CarouselItem(
+      icon: Icons.family_restroom,
+      title: "👨‍👩‍👧‍👦 LEGACY PLANNING",
+      message: "Create a lasting legacy for your loved ones. Store important messages, assets, and instructions.",
+      color: Colors.blue,
+    ),
+    CarouselItem(
+      icon: Icons.verified,
+      title: "✅ ACCESS PROTOCOL",
+      message: "Access requires death certificate verification. Your information remains private until then.",
+      color: Colors.purple,
+    ),
+    CarouselItem(
+      icon: Icons.tips_and_updates,
+      title: "💡 PRO TIP",
+      message: "Regularly update your information and inform trusted contacts about DOSSIER's existence.",
+      color: Colors.orange,
+    ),
+  ];
 
   @override
   void initState() {
     super.initState();
+    _pageController = PageController();
+    _startCarouselTimer();
     _loadData();
+  }
+
+  void _startCarouselTimer() {
+    _carouselTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      if (_pageController.hasClients) {
+        final nextPage = (_currentPage + 1) % _carouselItems.length;
+        _pageController.animateToPage(
+          nextPage,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _carouselTimer?.cancel();
+    _pageController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      final snapshot = await FirebaseDatabase.instance.ref("users/${user.uid}/username").get();
-      if (snapshot.exists) {
-        setState(() => _userName = snapshot.value as String);
+    if (user == null) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      // Load user name
+      final nameSnapshot = await FirebaseDatabase.instance.ref("users/${user.uid}/username").get();
+      if (nameSnapshot.exists) {
+        setState(() => _userName = nameSnapshot.value as String);
       }
-      
-      // Count pending access requests
+
+      // Load pending access requests
       final requestsSnapshot = await FirebaseDatabase.instance
           .ref("accessRequests")
           .orderByChild("userId")
           .equalTo(user.uid)
           .get();
-      
+
       if (requestsSnapshot.exists) {
         final requests = requestsSnapshot.value as Map<dynamic, dynamic>;
         setState(() {
           _pendingRequests = requests.values.where((r) => r["status"] == "pending").length;
         });
       }
+
+      // Load all counts
+      await _loadAssetsCount(user.uid);
+      await _loadLegacyEntriesCount(user.uid);
+      await _loadContactsCount(user.uid);
+      await _loadDocumentsCount(user.uid);
+
+    } catch (e) {
+      debugPrint("Error loading data: $e");
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _loadAssetsCount(String userId) async {
+    try {
+      final assetsSnapshot = await FirebaseDatabase.instance.ref("assets/$userId").get();
+      if (assetsSnapshot.exists) {
+        final assets = assetsSnapshot.value as Map<dynamic, dynamic>;
+        setState(() => _totalAssets = assets.length);
+      } else {
+        setState(() => _totalAssets = 0);
+      }
+    } catch (e) {
+      debugPrint("Error loading assets count: $e");
+      setState(() => _totalAssets = 0);
+    }
+  }
+
+  Future<void> _loadLegacyEntriesCount(String userId) async {
+    try {
+      final legacySnapshot = await FirebaseDatabase.instance.ref("legacyEntries/$userId").get();
+      if (legacySnapshot.exists) {
+        final entries = legacySnapshot.value as Map<dynamic, dynamic>;
+        setState(() => _totalLegacyEntries = entries.length);
+      } else {
+        setState(() => _totalLegacyEntries = 0);
+      }
+    } catch (e) {
+      debugPrint("Error loading legacy entries count: $e");
+      setState(() => _totalLegacyEntries = 0);
+    }
+  }
+
+  Future<void> _loadContactsCount(String userId) async {
+    try {
+      final contactsSnapshot = await FirebaseDatabase.instance.ref("trustedContacts/$userId").get();
+      if (contactsSnapshot.exists) {
+        final contacts = contactsSnapshot.value as Map<dynamic, dynamic>;
+        setState(() => _totalContacts = contacts.length);
+      } else {
+        setState(() => _totalContacts = 0);
+      }
+    } catch (e) {
+      debugPrint("Error loading contacts count: $e");
+      setState(() => _totalContacts = 0);
+    }
+  }
+
+  Future<void> _loadDocumentsCount(String userId) async {
+    try {
+      final documentsSnapshot = await FirebaseDatabase.instance.ref("documents/$userId").get();
+      if (documentsSnapshot.exists) {
+        final documents = documentsSnapshot.value as Map<dynamic, dynamic>;
+        setState(() => _totalDocuments = documents.length);
+      } else {
+        setState(() => _totalDocuments = 0);
+      }
+    } catch (e) {
+      debugPrint("Error loading documents count: $e");
+      setState(() => _totalDocuments = 0);
     }
   }
 
@@ -146,169 +295,405 @@ class _HomeContentState extends State<HomeContent> {
     final theme = Theme.of(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
 
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '${_getSalutation()}, $_userName!',
-            style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 8),
-          Text(
-            "Your legacy organizer. Keep everything your family needs to know.",
-            style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.7)),
-          ),
-          SizedBox(height: 24),
-          
-          // Legal Disclaimer Card
-          Container(
-            padding: EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.amber.withOpacity(0.1),
-              border: Border.all(color: Colors.amber, width: 1),
-              borderRadius: BorderRadius.circular(12),
+    return RefreshIndicator(
+      onRefresh: _loadData,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Greeting Section
+            Text(
+              '${_getSalutation()}, ${_userName.isEmpty ? "User" : _userName}!',
+              style: theme.textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                fontSize: 24,
+              ),
             ),
-            child: Row(
-              children: [
-                Icon(Icons.warning_amber_rounded, color: Colors.amber, size: 30),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "⚠️ LEGAL NOTICE",
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        "DOSSIER is an information storage tool only. Not a legal will. Access requires death certificate verification.",
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+            const SizedBox(height: 8),
+            Text(
+              "Your legacy organizer. Keep everything your family needs to know.",
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withOpacity(0.7),
+              ),
             ),
-          ),
-          
-          SizedBox(height: 24),
-          
-          // Pending Requests Card
-          if (_pendingRequests > 0)
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => AccessRequestsPage()),
-                );
-              },
-              child: Container(
-                padding: EdgeInsets.all(16),
-                margin: EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
-                  border: Border.all(color: Colors.blue, width: 1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.notification_important, color: Colors.blue, size: 30),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        "$_pendingRequests pending access request(s) awaiting your approval",
-                        style: TextStyle(fontWeight: FontWeight.bold),
+            const SizedBox(height: 24),
+
+            // Dynamic Island / Rotating Carousel
+            SizedBox(
+              height: 120,
+              child: PageView.builder(
+                controller: _pageController,
+                onPageChanged: (index) {
+                  setState(() {
+                    _currentPage = index;
+                  });
+                },
+                itemCount: _carouselItems.length,
+                itemBuilder: (context, index) {
+                  final item = _carouselItems[index];
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          item.color.withOpacity(0.15),
+                          item.color.withOpacity(0.05),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      border: Border.all(color: item.color, width: 1.5),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: item.color.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: item.color.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Icon(item.icon, color: item.color, size: 28),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  item.title,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                    color: item.color,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  item.message,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: theme.colorScheme.onSurface.withOpacity(0.7),
+                                    height: 1.3,
+                                  ),
+                                  maxLines: 3,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    Icon(Icons.arrow_forward_ios, size: 16),
-                  ],
+                  );
+                },
+              ),
+            ),
+
+            // Page Indicator Dots
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                _carouselItems.length,
+                    (index) => Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _currentPage == index
+                        ? Colors.amber
+                        : Colors.grey.withOpacity(0.4),
+                  ),
                 ),
               ),
             ),
-          
-          // Quick Stats
-          Text(
-            "Quick Overview",
-            style: theme.textTheme.titleLarge,
-          ),
-          SizedBox(height: 16),
-          GridView.count(
-            shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            childAspectRatio: 1.5,
+
+            const SizedBox(height: 24),
+
+            // Loading Indicator
+            if (_isLoading)
+              const Center(child: CircularProgressIndicator())
+            else ...[
+              // Pending Requests Card (if any)
+              if (_pendingRequests > 0)
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) =>  AccessRequestsPage()),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      border: Border.all(color: Colors.red, width: 1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.notification_important, color: Colors.red, size: 30),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            "$_pendingRequests pending access request(s) awaiting your approval",
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        const Icon(Icons.arrow_forward_ios, size: 16),
+                      ],
+                    ),
+                  ),
+                ),
+
+              // Stats Cards Row - Tappable navigation cards
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildStatCard(
+                      icon: Icons.inventory_2,
+                      title: "Assets",
+                      value: _totalAssets.toString(),
+                      subtitle: "items tracked",
+                      color: Colors.blue,
+                      themeProvider: themeProvider,
+                      onTap: () {
+                        _navigateToPage(1);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildStatCard(
+                      icon: Icons.book,
+                      title: "Legacy",
+                      value: _totalLegacyEntries.toString(),
+                      subtitle: "messages saved",
+                      color: Colors.purple,
+                      themeProvider: themeProvider,
+                      onTap: () {
+                        _navigateToPage(2);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildStatCard(
+                      icon: Icons.people,
+                      title: "Contacts",
+                      value: _totalContacts.toString(),
+                      subtitle: "trusted people",
+                      color: Colors.green,
+                      themeProvider: themeProvider,
+                      onTap: () {
+                        _navigateToPage(3);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildStatCard(
+                      icon: Icons.folder,
+                      title: "Documents",
+                      value: _totalDocuments.toString(),
+                      subtitle: "files referenced",
+                      color: Colors.orange,
+                      themeProvider: themeProvider,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) =>  DocumentVaultPage()),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 24),
+
+              // Recent Activity Section
+              if (_totalAssets > 0 || _totalLegacyEntries > 0)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Recent Activity",
+                      style: theme.textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildRecentActivityCard(),
+                  ],
+                ),
+
+              const SizedBox(height: 24),
+
+              // // How It Works Section
+              // Text(
+              //   "How DOSSIER Works",
+              //   style: theme.textTheme.titleLarge,
+              // ),
+              // const SizedBox(height: 16),
+              // _buildStepCard("1", "Store", "Add your assets, legacy messages, and trusted contacts"),
+              // _buildStepCard("2", "Rest", "Your information stays secure and private"),
+              // _buildStepCard("3", "Request", "Trusted contacts request access when needed"),
+              // _buildStepCard("4", "Verify", "Death certificate required for access"),
+              //
+              // const SizedBox(height: 32),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecentActivityCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildStatCard(Icons.inventory_2, "Assets", "Track what you own", Colors.blue, themeProvider),
-              _buildStatCard(Icons.book, "Legacy", "Leave your wishes", Colors.purple, themeProvider),
-              _buildStatCard(Icons.people, "Trusted", "Your people", Colors.green, themeProvider),
-              _buildStatCard(Icons.folder, "Documents", "Store references", Colors.orange, themeProvider),
+              Text("📦 You have $_totalAssets asset(s) tracked"),
+              if (_totalAssets > 0)
+                TextButton(
+                  onPressed: () => _navigateToPage(1),
+                  child: const Text("View All"),
+                ),
             ],
           ),
-          
-          SizedBox(height: 24),
-          
-          // How It Works
-          Text(
-            "How DOSSIER Works",
-            style: theme.textTheme.titleLarge,
+          const Divider(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text("📝 $_totalLegacyEntries legacy message(s) saved"),
+              if (_totalLegacyEntries > 0)
+                TextButton(
+                  onPressed: () => _navigateToPage(2),
+                  child: const Text("View All"),
+                ),
+            ],
           ),
-          SizedBox(height: 16),
-          _buildStepCard("1", "Store", "Add your assets, legacy messages, and trusted contacts"),
-          _buildStepCard("2", "Rest", "Your information stays secure and private"),
-          _buildStepCard("3", "Request", "Trusted contacts request access when needed"),
-          _buildStepCard("4", "Verify", "Death certificate required for access"),
+          const Divider(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text("👥 $_totalContacts trusted contact(s) added"),
+              if (_totalContacts > 0)
+                TextButton(
+                  onPressed: () => _navigateToPage(3),
+                  child: const Text("View All"),
+                ),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildStatCard(IconData icon, String title, String subtitle, Color color, ThemeProvider themeProvider) {
-    return Container(
-      decoration: BoxDecoration(
-        color: themeProvider.isDarkMode ? Colors.grey[800] : Colors.grey[100],
-        borderRadius: BorderRadius.circular(12),
-      ),
-      padding: EdgeInsets.all(12),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 32, color: color),
-          SizedBox(height: 8),
-          Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          Text(subtitle, style: TextStyle(fontSize: 11), textAlign: TextAlign.center),
-        ],
+  void _navigateToPage(int index) {
+    final homepageState = context.findAncestorStateOfType<_homepageState>();
+    if (homepageState != null) {
+      homepageState.setState(() {
+        homepageState._selectedIndex = index;
+      });
+    }
+  }
+
+  Widget _buildStatCard({
+    required IconData icon,
+    required String title,
+    required String value,
+    required String subtitle,
+    required Color color,
+    required ThemeProvider themeProvider,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: themeProvider.isDarkMode ? Colors.grey[800] : Colors.grey[100],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: themeProvider.isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+            width: 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, size: 32, color: color),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+            ),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+            ),
+            Text(
+              subtitle,
+              style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildStepCard(String number, String title, String description) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
           Container(
             width: 40,
             height: 40,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.amber,
               shape: BoxShape.circle,
             ),
             child: Center(
-              child: Text(number, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white)),
+              child: Text(
+                number,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white),
+              ),
             ),
           ),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TextStyle(fontWeight: FontWeight.bold)),
-                Text(description, style: TextStyle(fontSize: 12, color: Colors.grey)),
+                Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(description, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
               ],
             ),
           ),
@@ -316,4 +701,19 @@ class _HomeContentState extends State<HomeContent> {
       ),
     );
   }
+}
+
+// Carousel Item Model
+class CarouselItem {
+  final IconData icon;
+  final String title;
+  final String message;
+  final Color color;
+
+  CarouselItem({
+    required this.icon,
+    required this.title,
+    required this.message,
+    required this.color,
+  });
 }

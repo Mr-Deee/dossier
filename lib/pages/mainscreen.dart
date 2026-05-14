@@ -1,7 +1,10 @@
-import 'package:dossier/pages/About.dart';
 import 'package:dossier/pages/homepage.dart';
 import 'package:dossier/pages/profile.dart';
+import 'package:dossier/pages/settings_page.dart';
+import 'package:dossier/pages/trusted_contacts.dart';
 import 'package:flutter/material.dart';
+
+import 'contact_us.dart';
 
 class MainScreen extends StatefulWidget {
   @override
@@ -13,9 +16,10 @@ class _MainScreenState extends State<MainScreen> {
 
   static List<Widget> _widgetOptions = <Widget>[
     // AboutPage(),
-    Profile(),
+
+    TrustedContactsPage(),
     homepage(),
-    About(),
+    SettingsPage(),
   ];
 
   void _onItemTapped(int index) {
@@ -36,8 +40,8 @@ class _MainScreenState extends State<MainScreen> {
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
+            icon: Icon(Icons.security),
+            label: 'Trusties',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
