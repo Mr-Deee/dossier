@@ -1,4 +1,4 @@
-// lib/main_pages/homepage.dart - Updated HomeContent without Dossier Summary
+// lib/main_pages/homepage.dart - Updated with animated DOSSIER. and tap theme toggle
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -25,8 +25,8 @@ class _homepageState extends State<homepage> {
   String _userName = "";
 
   final List<Widget> _pages = [
-     HomeContent(),
-     AssetInventoryPage(),
+    const HomeContent(),
+    const AssetInventoryPage(),
      LegacyJournalPage(),
      TrustedContactsPage(),
   ];
@@ -54,14 +54,22 @@ class _homepageState extends State<homepage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          "DOSSIER.",
-          style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-        ),
+        title: const AnimatedDossierTitle(),
         actions: [
-          Switch(
-            value: themeProvider.isDarkMode,
-            onChanged: (value) => themeProvider.toggleTheme(value),
+          // Replace Switch with IconButton for theme toggle
+          IconButton(
+            onPressed: () {
+              themeProvider.toggleTheme(!themeProvider.isDarkMode);
+            },
+            icon: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: Icon(
+                themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                key: ValueKey(themeProvider.isDarkMode),
+                color: themeProvider.isDarkMode ? Colors.amber : Colors.black,
+              ),
+            ),
+            tooltip: themeProvider.isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode",
           ),
           PopupMenuButton<String>(
             onSelected: (value) {
@@ -96,6 +104,88 @@ class _homepageState extends State<homepage> {
     if (mounted) {
       Navigator.pushReplacementNamed(context, '/login');
     }
+  }
+}
+
+// Animated Dossier Title with color-changing dot
+class AnimatedDossierTitle extends StatefulWidget {
+  const AnimatedDossierTitle({super.key});
+
+  @override
+  State<AnimatedDossierTitle> createState() => _AnimatedDossierTitleState();
+}
+
+class _AnimatedDossierTitleState extends State<AnimatedDossierTitle> with SingleTickerProviderStateMixin {
+  late AnimationController _colorController;
+  int _colorIndex = 0;
+  final List<Color> _dotColors = [Colors.red, Colors.amber, Colors.red, Colors.orange, Colors.red];
+
+  @override
+  void initState() {
+    super.initState();
+    _colorController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    )..addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        setState(() {
+          _colorIndex = (_colorIndex + 1) % _dotColors.length;
+        });
+        _colorController.forward(from: 0.0);
+      }
+    });
+    _colorController.forward();
+  }
+
+  @override
+  void dispose() {
+    _colorController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return RichText(
+      text: TextSpan(
+        children: [
+          TextSpan(
+            text: "DOSSIER",
+            style: theme.textTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              fontSize: 22,
+              color: theme.brightness == Brightness.dark ? Colors.white : Colors.black,
+            ),
+          ),
+          WidgetSpan(
+            child: AnimatedBuilder(
+              animation: _colorController,
+              builder: (context, child) {
+                return ShaderMask(
+                  shaderCallback: (bounds) => LinearGradient(
+                    colors: [
+                      _dotColors[_colorIndex],
+                      _dotColors[_colorIndex].withOpacity(0.7),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ).createShader(bounds),
+                  child: Text(
+                    ".",
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 28,
+                      color: Colors.white,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -522,7 +612,7 @@ class _HomeContentState extends State<HomeContent> {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) =>  DocumentVaultPage()),
+                          MaterialPageRoute(builder: (context) => DocumentVaultPage()),
                         );
                       },
                     ),
@@ -545,21 +635,6 @@ class _HomeContentState extends State<HomeContent> {
                     _buildRecentActivityCard(),
                   ],
                 ),
-
-              const SizedBox(height: 24),
-
-              // // How It Works Section
-              // Text(
-              //   "How DOSSIER Works",
-              //   style: theme.textTheme.titleLarge,
-              // ),
-              // const SizedBox(height: 16),
-              // _buildStepCard("1", "Store", "Add your assets, legacy messages, and trusted contacts"),
-              // _buildStepCard("2", "Rest", "Your information stays secure and private"),
-              // _buildStepCard("3", "Request", "Trusted contacts request access when needed"),
-              // _buildStepCard("4", "Verify", "Death certificate required for access"),
-              //
-              // const SizedBox(height: 32),
             ],
           ],
         ),

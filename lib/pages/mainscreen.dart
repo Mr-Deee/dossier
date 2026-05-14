@@ -1,5 +1,4 @@
 import 'package:dossier/pages/homepage.dart';
-import 'package:dossier/pages/profile.dart';
 import 'package:dossier/pages/settings_page.dart';
 import 'package:dossier/pages/trusted_contacts.dart';
 import 'package:flutter/material.dart';
@@ -15,7 +14,6 @@ class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 1;
 
   static List<Widget> _widgetOptions = <Widget>[
-    // AboutPage(),
 
     TrustedContactsPage(),
     homepage(),
