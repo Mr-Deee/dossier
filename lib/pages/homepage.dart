@@ -26,7 +26,7 @@ class _homepageState extends State<homepage> {
 
   final List<Widget> _pages = [
     const HomeContent(),
-    const AssetInventoryPage(),
+     AssetInventoryPage(),
      LegacyJournalPage(),
      TrustedContactsPage(),
   ];

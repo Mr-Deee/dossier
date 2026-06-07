@@ -29,8 +29,12 @@ class _LoginPageState extends State<LoginPage> {
   bool _isLoading = false;
   bool _isNavigating = false;
 
+  // Add a flag to track if the widget is mounted and safe for async operations
+  bool _isDisposed = false;
+
   @override
   void dispose() {
+    _isDisposed = true;
     _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
@@ -219,7 +223,7 @@ class _LoginPageState extends State<LoginPage> {
                             const Text('Not registered yet?'),
                             TextButton(
                               onPressed: () {
-                                if (!_isNavigating) {
+                                if (!_isNavigating && mounted && !_isDisposed) {
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
@@ -247,19 +251,23 @@ class _LoginPageState extends State<LoginPage> {
 
   void _loginAndAuthenticateUser() async {
     // Prevent multiple login attempts
-    if (_isLoading || _isNavigating) return;
+    if (_isLoading || _isNavigating || _isDisposed) return;
 
     // Set loading state
-    setState(() {
-      _isLoading = true;
-    });
+    if (mounted && !_isDisposed) {
+      setState(() {
+        _isLoading = true;
+      });
+    } else {
+      return;
+    }
 
     String email = _emailController.text.trim();
     String password = _passwordController.text.trim();
 
     // Validate inputs
     if (email.isEmpty || password.isEmpty) {
-      if (mounted) {
+      if (mounted && !_isDisposed) {
         setState(() {
           _isLoading = false;
         });
@@ -272,33 +280,35 @@ class _LoginPageState extends State<LoginPage> {
       UserCredential userCredential = await _firebaseAuth
           .signInWithEmailAndPassword(email: email, password: password);
 
-      // Check if widget is still mounted before proceeding
-      if (!mounted) return;
+      // Check if widget is still mounted and not disposed before proceeding
+      if (!mounted || _isDisposed) return;
 
       // Get user info
       await AssistantMethods.getCurrentOnlineUserInfo(context);
 
       // Mark that we're navigating to prevent any further UI updates
-      if (mounted) {
+      if (mounted && !_isDisposed) {
         setState(() {
           _isNavigating = true;
+          _isLoading = false; // Clear loading state
         });
 
-        // Use a delayed navigation to ensure all UI updates are complete
-        await Future.delayed(const Duration(milliseconds: 100));
+        _displayToast("Logged in successfully");
 
-        if (mounted) {
+        // Use a microtask delay to ensure all UI updates are complete
+        await Future.microtask(() {});
+
+        if (mounted && !_isDisposed) {
           // Clear all routes and navigate to homepage
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (context) => homepage()),
                 (Route<dynamic> route) => false,
           );
-          _displayToast("Logged in successfully");
         }
       }
 
     } on FirebaseAuthException catch (e) {
-      if (!mounted) return;
+      if (!mounted || _isDisposed) return;
 
       // Handle specific Firebase errors
       String errorMessage;
@@ -328,13 +338,20 @@ class _LoginPageState extends State<LoginPage> {
       _displayToast(errorMessage);
       print("Firebase auth error: ${e.code} - ${e.message}");
 
+      // Reset loading state
+      if (mounted && !_isDisposed && !_isNavigating) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || _isDisposed) return;
       _displayToast("Error: ${e.toString()}");
       print("Login error: ${e.toString()}");
-    } finally {
-      // Reset loading state only if not navigating
-      if (mounted && !_isNavigating) {
+
+      // Reset loading state
+      if (mounted && !_isDisposed && !_isNavigating) {
         setState(() {
           _isLoading = false;
         });
@@ -343,6 +360,8 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _displayToast(String message) {
-    Fluttertoast.showToast(msg: message);
+    if (mounted && !_isDisposed) {
+      Fluttertoast.showToast(msg: message);
+    }
   }
 }
