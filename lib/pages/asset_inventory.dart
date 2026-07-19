@@ -3,11 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 
+import '../models/NotificationService.dart';
+import '../widget/NotificationSheet.dart';
+
 // ==================== APP COLORS ====================
 class AppColors {
-  static const Color primaryGold = Color(0xFFD4AF37);
-  static const Color primaryGoldLight = Color(0x33D4AF37);
-  static const Color primaryGoldMedium = Color(0x4DD4AF37);
+  static const Color primaryGold = Color(0xFFF5A623);
+  static const Color primaryGoldLight = Color(0x33F5A623);
+  static const Color primaryGoldMedium = Color(0x4DF5A623);
   static const Color white = Color(0xFFFFFFFF);
   static const Color black = Color(0xFF000000);
   static const Color black87 = Color(0xDD000000);
@@ -157,132 +160,14 @@ class Asset {
   };
 }
 
-// ==================== NOTIFICATION MODEL ====================
-enum NotificationType { email, push, both }
-enum NotificationFrequency { once, daily, weekly, monthly, quarterly, yearly }
-
-extension NotificationFrequencyExtension on NotificationFrequency {
-  String get displayName {
-    switch (this) {
-      case NotificationFrequency.once: return "Once";
-      case NotificationFrequency.daily: return "Daily";
-      case NotificationFrequency.weekly: return "Weekly";
-      case NotificationFrequency.monthly: return "Monthly";
-      case NotificationFrequency.quarterly: return "Quarterly";
-      case NotificationFrequency.yearly: return "Yearly";
-    }
-  }
-}
-
-class NotificationSchedule {
-  final String id;
-  final String assetId;
-  final String assetName;
-  final NotificationType type;
-  final NotificationFrequency frequency;
-  final DateTime scheduledTime;
-  final String? recipientEmail;
-  final String? recipientPhone;
-  final bool isActive;
-  final DateTime createdAt;
-  final DateTime? lastSent;
-
-  NotificationSchedule({
-    required this.id,
-    required this.assetId,
-    required this.assetName,
-    required this.type,
-    required this.frequency,
-    required this.scheduledTime,
-    this.recipientEmail,
-    this.recipientPhone,
-    required this.isActive,
-    required this.createdAt,
-    this.lastSent,
-  });
-
-  factory NotificationSchedule.fromJson(Map<String, dynamic> json, String id) {
-    return NotificationSchedule(
-      id: id,
-      assetId: json["assetId"]?.toString() ?? "",
-      assetName: json["assetName"]?.toString() ?? "",
-      type: NotificationType.values.firstWhere(
-            (e) => e.toString() == json["type"],
-        orElse: () => NotificationType.email,
-      ),
-      frequency: NotificationFrequency.values.firstWhere(
-            (e) => e.toString() == json["frequency"],
-        orElse: () => NotificationFrequency.once,
-      ),
-      scheduledTime: DateTime.parse(json["scheduledTime"]?.toString() ?? DateTime.now().toIso8601String()),
-      recipientEmail: json["recipientEmail"]?.toString(),
-      recipientPhone: json["recipientPhone"]?.toString(),
-      isActive: json["isActive"] == true,
-      createdAt: DateTime.parse(json["createdAt"]?.toString() ?? DateTime.now().toIso8601String()),
-      lastSent: json["lastSent"] != null ? DateTime.parse(json["lastSent"]) : null,
-    );
-  }
-
-  Map<String, dynamic> toJson() => {
-    "assetId": assetId,
-    "assetName": assetName,
-    "type": type.toString(),
-    "frequency": frequency.toString(),
-    "scheduledTime": scheduledTime.toIso8601String(),
-    "recipientEmail": recipientEmail,
-    "recipientPhone": recipientPhone,
-    "isActive": isActive,
-    "createdAt": createdAt.toIso8601String(),
-    "lastSent": lastSent?.toIso8601String(),
-  };
-}
-
-// ==================== NOTIFICATION SERVICE ====================
-class NotificationService {
-  final DatabaseReference _notificationsRef = FirebaseDatabase.instance.ref("notificationSchedules");
-
-  String? get _currentUserId => FirebaseAuth.instance.currentUser?.uid;
-
-  Future<List<NotificationSchedule>> getNotificationSchedules() async {
-    if (_currentUserId == null) return [];
-
-    try {
-      final snapshot = await _notificationsRef.child(_currentUserId!).get();
-      if (!snapshot.exists) return [];
-
-      final data = snapshot.value as Map<dynamic, dynamic>;
-      return data.entries.map((entry) =>
-          NotificationSchedule.fromJson(_safeCast(entry.value), entry.key.toString())
-      ).toList();
-    } catch (e) {
-      print("Error loading notifications: $e");
-      return [];
-    }
-  }
-
-  Future<void> scheduleNotification(NotificationSchedule schedule) async {
-    if (_currentUserId == null) return;
-    final notificationRef = _notificationsRef.child(_currentUserId!).child(schedule.id);
-    await notificationRef.set(schedule.toJson());
-  }
-
-  Future<void> updateNotificationSchedule(NotificationSchedule schedule) async {
-    if (_currentUserId == null) return;
-    await _notificationsRef.child(_currentUserId!).child(schedule.id).update(schedule.toJson());
-  }
-
-  Future<void> deleteNotificationSchedule(String id) async {
-    if (_currentUserId == null) return;
-    await _notificationsRef.child(_currentUserId!).child(id).remove();
-  }
-}
-
 // ==================== CUSTOM WIDGETS ====================
+
 class GoldAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final Widget? leading;
   final List<Widget>? actions;
   final String? subtitle;
+  final bool showBackButton; // Add this field
 
   const GoldAppBar({
     super.key,
@@ -290,62 +175,73 @@ class GoldAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.leading,
     this.actions,
     this.subtitle,
+    this.showBackButton = false, // Default to false
   });
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection:Axis.vertical ,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+    return AppBar(
+      backgroundColor: Colors.amber,
+      elevation: 4,
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            decoration: const BoxDecoration(
-              color: AppColors.primaryGold,
-              boxShadow: [
-                BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
-              ],
-            ),
-            child: Row(
-              children: [
-                leading ?? const SizedBox.shrink(),
-                if (leading != null) const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.black,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                if (actions != null) ...actions!,
-              ],
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: AppColors.black,
             ),
           ),
           if (subtitle != null)
-            Container(
-              padding: const EdgeInsets.all(8),
-              color: AppColors.primaryGold,
-              child: Row(
-                children: [
-                  const Icon(Icons.info_outline, color: AppColors.black, size: 16),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text(subtitle!, style: const TextStyle(fontSize: 11, color: AppColors.black))),
-                ],
+            Text(
+              subtitle!,
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.primaryGold,
               ),
             ),
         ],
       ),
+      leading: leading ??
+          (showBackButton
+              ? IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            onPressed: () => Navigator.pop(context),
+          )
+              : null),
+      actions: actions,
+      bottom: subtitle != null
+          ? PreferredSize(
+        preferredSize: const Size.fromHeight(30),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          color: AppColors.black.withOpacity(0.5),
+          child: Row(
+            children: [
+              const Icon(Icons.info_outline, color: AppColors.primaryGold, size: 16),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  subtitle!,
+                  style: const TextStyle(fontSize: 11, color: AppColors.white),
+                ),
+              ),
+            ],
+          ),
+        ),
+      )
+          : null,
     );
   }
 
   @override
-  Size get preferredSize => Size.fromHeight(subtitle != null ? 100 : 70);
+  Size get preferredSize => Size.fromHeight(
+    subtitle != null ? 100 : kToolbarHeight,
+  );
 }
+
 
 class GoldCard extends StatelessWidget {
   final Widget child;
@@ -474,756 +370,19 @@ class GoldButton extends StatelessWidget {
   }
 }
 
-// ==================== ADD NOTIFICATION DIALOG ====================
-class AddNotificationDialog extends StatefulWidget {
-  final Asset asset;
-  final Function(NotificationSchedule) onSave;
-
-  const AddNotificationDialog({
-    super.key,
-    required this.asset,
-    required this.onSave,
-  });
-
-  @override
-  State<AddNotificationDialog> createState() => _AddNotificationDialogState();
-}
-
-class _AddNotificationDialogState extends State<AddNotificationDialog> {
-  final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
-
-  NotificationType _selectedType = NotificationType.email;
-  NotificationFrequency _selectedFrequency = NotificationFrequency.once;
-  DateTime _selectedDateTime = DateTime.now().add(const Duration(days: 1));
-  TimeOfDay _selectedTime = TimeOfDay.now();
-  bool _isLoading = false;
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _phoneController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _selectDateTime() async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: _selectedDateTime,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
-    );
-
-    if (date != null && mounted) {
-      final time = await showTimePicker(
-        context: context,
-        initialTime: _selectedTime,
-      );
-
-      if (time != null && mounted) {
-        setState(() {
-          _selectedDateTime = DateTime(date.year, date.month, date.day, time.hour, time.minute);
-          _selectedTime = time;
-        });
-      }
-    }
-  }
-
-  void _handleSave() {
-    if (_formKey.currentState!.validate()) {
-      _saveNotification();
-    }
-  }
-
-  Future<void> _saveNotification() async {
-    setState(() => _isLoading = true);
-
-    final schedule = NotificationSchedule(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      assetId: widget.asset.key ?? "",
-      assetName: widget.asset.description,
-      type: _selectedType,
-      frequency: _selectedFrequency,
-      scheduledTime: _selectedDateTime,
-      recipientEmail: _selectedType != NotificationType.push ? _emailController.text.trim() : null,
-      recipientPhone: _selectedType != NotificationType.email ? _phoneController.text.trim() : null,
-      isActive: true,
-      createdAt: DateTime.now(),
-    );
-
-    await widget.onSave(schedule);
-
-    if (mounted) {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Notification scheduled successfully"), backgroundColor: Colors.green),
-      );
-    }
-
-    if (mounted) {
-      setState(() => _isLoading = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      insetPadding: EdgeInsets.zero,
-      child: Container(
-        width: double.infinity,
-        height: double.infinity,
-        color: AppColors.white,
-        child: Column(
-          children: [
-            GoldAppBar(
-              title: "Schedule Notification",
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back, color: AppColors.black, size: 28),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      GoldCard(
-                        child: Row(
-                          children: [
-                            Icon(AssetType.getIcon(widget.asset.type), color: AppColors.primaryGold),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text("Asset", style: TextStyle(fontSize: 12, color: AppColors.primaryGold)),
-                                  Text(widget.asset.description, style: const TextStyle(fontWeight: FontWeight.bold)),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      const Text(
-                        "Notification Type",
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primaryGold),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: NotificationType.values.map((type) {
-                          return Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4),
-                              child: FilterChip(
-                                label: Text(type.toString().split('.').last.toUpperCase()),
-                                selected: _selectedType == type,
-                                onSelected: (selected) {
-                                  setState(() {
-                                    if (selected) _selectedType = type;
-                                  });
-                                },
-                                selectedColor: AppColors.primaryGoldMedium,
-                                checkmarkColor: AppColors.primaryGold,
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                      const SizedBox(height: 20),
-
-                      if (_selectedType != NotificationType.push) ...[
-                        GoldFormField(
-                          controller: _emailController,
-                          label: "Recipient Email",
-                          hint: "Enter email address",
-                          prefixIcon: Icons.email,
-                          isRequired: true,
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return "Please enter recipient email";
-                            }
-                            if (!value.contains('@')) {
-                              return "Please enter a valid email";
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-
-                      if (_selectedType != NotificationType.email) ...[
-                        GoldFormField(
-                          controller: _phoneController,
-                          label: "Recipient Phone",
-                          hint: "Enter phone number",
-                          prefixIcon: Icons.phone,
-                          isRequired: true,
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return "Please enter recipient phone number";
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-
-                      const Text(
-                        "Notification Frequency",
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primaryGold),
-                      ),
-                      const SizedBox(height: 12),
-                      DropdownButtonFormField<NotificationFrequency>(
-                        value: _selectedFrequency,
-                        items: NotificationFrequency.values.map((freq) {
-                          return DropdownMenuItem(
-                            value: freq,
-                            child: Text(freq.displayName),
-                          );
-                        }).toList(),
-                        onChanged: (value) => setState(() => _selectedFrequency = value!),
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      const Text(
-                        "Schedule Date & Time",
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primaryGold),
-                      ),
-                      const SizedBox(height: 12),
-                      InkWell(
-                        onTap: _selectDateTime,
-                        child: GoldCard(
-                          child: Row(
-                            children: [
-                              const Icon(Icons.calendar_today, color: AppColors.primaryGold),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text("Select Date & Time", style: TextStyle(fontSize: 12, color: AppColors.black54)),
-                                    Text(
-                                      "${_selectedDateTime.toLocal().toString().split('.').first}",
-                                      style: const TextStyle(fontWeight: FontWeight.bold),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.primaryGold),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-
-                      GoldButton(
-                        text: _isLoading ? "Scheduling..." : "Schedule Notification",
-                        icon: Icons.notifications_active,
-                        onPressed: _isLoading ? null : _handleSave,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ==================== EDIT NOTIFICATION DIALOG ====================
-class EditNotificationDialog extends StatefulWidget {
-  final NotificationSchedule schedule;
-  final VoidCallback onUpdate;
-
-  const EditNotificationDialog({
-    super.key,
-    required this.schedule,
-    required this.onUpdate,
-  });
-
-  @override
-  State<EditNotificationDialog> createState() => _EditNotificationDialogState();
-}
-
-class _EditNotificationDialogState extends State<EditNotificationDialog> {
-  final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
-
-  late NotificationType _selectedType;
-  late NotificationFrequency _selectedFrequency;
-  late DateTime _selectedDateTime;
-  late TimeOfDay _selectedTime;
-  late bool _isActive;
-  bool _isLoading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedType = widget.schedule.type;
-    _selectedFrequency = widget.schedule.frequency;
-    _selectedDateTime = widget.schedule.scheduledTime;
-    _selectedTime = TimeOfDay.fromDateTime(widget.schedule.scheduledTime);
-    _isActive = widget.schedule.isActive;
-    _emailController.text = widget.schedule.recipientEmail ?? "";
-    _phoneController.text = widget.schedule.recipientPhone ?? "";
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _phoneController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _selectDateTime() async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: _selectedDateTime,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
-    );
-
-    if (date != null && mounted) {
-      final time = await showTimePicker(
-        context: context,
-        initialTime: _selectedTime,
-      );
-
-      if (time != null && mounted) {
-        setState(() {
-          _selectedDateTime = DateTime(date.year, date.month, date.day, time.hour, time.minute);
-          _selectedTime = time;
-        });
-      }
-    }
-  }
-
-  void _handleUpdate() {
-    if (_formKey.currentState!.validate()) {
-      _updateNotification();
-    }
-  }
-
-  Future<void> _updateNotification() async {
-    setState(() => _isLoading = true);
-
-    final updatedSchedule = NotificationSchedule(
-      id: widget.schedule.id,
-      assetId: widget.schedule.assetId,
-      assetName: widget.schedule.assetName,
-      type: _selectedType,
-      frequency: _selectedFrequency,
-      scheduledTime: _selectedDateTime,
-      recipientEmail: _selectedType != NotificationType.push ? _emailController.text.trim() : null,
-      recipientPhone: _selectedType != NotificationType.email ? _phoneController.text.trim() : null,
-      isActive: _isActive,
-      createdAt: widget.schedule.createdAt,
-      lastSent: widget.schedule.lastSent,
-    );
-
-    final notificationService = NotificationService();
-    await notificationService.updateNotificationSchedule(updatedSchedule);
-
-    if (mounted) {
-      widget.onUpdate();
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Notification updated successfully"), backgroundColor: Colors.green),
-      );
-    }
-
-    if (mounted) {
-      setState(() => _isLoading = false);
-    }
-  }
-
-  void _handleDelete() {
-    _deleteNotification();
-  }
-
-  Future<void> _deleteNotification() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Delete Notification"),
-        content: const Text("Are you sure you want to delete this notification?"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text("Cancel"),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.red),
-            child: const Text("Delete"),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true && mounted) {
-      final notificationService = NotificationService();
-      await notificationService.deleteNotificationSchedule(widget.schedule.id);
-      widget.onUpdate();
-      if (mounted) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Notification deleted"), backgroundColor: Colors.red),
-        );
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      insetPadding: EdgeInsets.zero,
-      child: Container(
-        width: double.infinity,
-        height: double.infinity,
-        color: AppColors.white,
-        child: Column(
-          children: [
-            GoldAppBar(
-              title: "Edit Notification",
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back, color: AppColors.black, size: 28),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SwitchListTile(
-                        title: const Text("Active", style: TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: const Text("Enable or disable this notification"),
-                        value: _isActive,
-                        onChanged: (value) => setState(() => _isActive = value),
-                        activeColor: AppColors.primaryGold,
-                      ),
-                      const SizedBox(height: 16),
-
-                      const Text(
-                        "Notification Type",
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primaryGold),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: NotificationType.values.map((type) {
-                          return Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4),
-                              child: FilterChip(
-                                label: Text(type.toString().split('.').last.toUpperCase()),
-                                selected: _selectedType == type,
-                                onSelected: (selected) {
-                                  setState(() {
-                                    if (selected) _selectedType = type;
-                                  });
-                                },
-                                selectedColor: AppColors.primaryGoldMedium,
-                                checkmarkColor: AppColors.primaryGold,
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                      const SizedBox(height: 20),
-
-                      if (_selectedType != NotificationType.push) ...[
-                        GoldFormField(
-                          controller: _emailController,
-                          label: "Recipient Email",
-                          hint: "Enter email address",
-                          prefixIcon: Icons.email,
-                          isRequired: true,
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return "Please enter recipient email";
-                            }
-                            if (!value.contains('@')) {
-                              return "Please enter a valid email";
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-
-                      if (_selectedType != NotificationType.email) ...[
-                        GoldFormField(
-                          controller: _phoneController,
-                          label: "Recipient Phone",
-                          hint: "Enter phone number",
-                          prefixIcon: Icons.phone,
-                          isRequired: true,
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return "Please enter recipient phone number";
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-
-                      const Text(
-                        "Notification Frequency",
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primaryGold),
-                      ),
-                      const SizedBox(height: 12),
-                      DropdownButtonFormField<NotificationFrequency>(
-                        value: _selectedFrequency,
-                        items: NotificationFrequency.values.map((freq) {
-                          return DropdownMenuItem(
-                            value: freq,
-                            child: Text(freq.displayName),
-                          );
-                        }).toList(),
-                        onChanged: (value) => setState(() => _selectedFrequency = value!),
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      const Text(
-                        "Schedule Date & Time",
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primaryGold),
-                      ),
-                      const SizedBox(height: 12),
-                      InkWell(
-                        onTap: _selectDateTime,
-                        child: GoldCard(
-                          child: Row(
-                            children: [
-                              const Icon(Icons.calendar_today, color: AppColors.primaryGold),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text("Select Date & Time", style: TextStyle(fontSize: 12, color: AppColors.black54)),
-                                    Text(
-                                      "${_selectedDateTime.toLocal().toString().split('.').first}",
-                                      style: const TextStyle(fontWeight: FontWeight.bold),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.primaryGold),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-
-                      GoldButton(
-                        text: _isLoading ? "Updating..." : "Update Notification",
-                        icon: Icons.save,
-                        onPressed: _isLoading ? null : _handleUpdate,
-                      ),
-                      const SizedBox(height: 16),
-
-                      GoldButton(
-                        text: "Delete Notification",
-                        icon: Icons.delete,
-                        onPressed: _handleDelete,
-                        isPrimary: false,
-                        isOutlined: true,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ==================== NOTIFICATION SETTINGS SHEET ====================
-class NotificationSettingsSheet extends StatefulWidget {
-  const NotificationSettingsSheet({super.key});
-
-  @override
-  State<NotificationSettingsSheet> createState() => _NotificationSettingsSheetState();
-}
-
-class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
-  List<NotificationSchedule> _schedules = [];
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadSchedules();
-  }
-
-  Future<void> _loadSchedules() async {
-    setState(() => _isLoading = true);
-    final notificationService = NotificationService();
-    final schedules = await notificationService.getNotificationSchedules();
-    setState(() {
-      _schedules = schedules;
-      _isLoading = false;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: Column(
-        children: [
-          GoldAppBar(
-            title: "Notification Settings",
-            subtitle: "Manage your scheduled notifications",
-          ),
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator(color: AppColors.primaryGold))
-                : _schedules.isEmpty
-                ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.notifications_none, size: 80, color: Colors.grey.shade400),
-                  const SizedBox(height: 16),
-                  const Text(
-                    "No scheduled notifications",
-                    style: TextStyle(fontSize: 18, color: AppColors.black54),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    "Add notifications from asset details",
-                    style: TextStyle(color: AppColors.black54),
-                  ),
-                ],
-              ),
-            )
-                : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _schedules.length,
-              itemBuilder: (context, index) {
-                final schedule = _schedules[index];
-                return GoldCard(
-                  onTap: () async {
-                    await showDialog(
-                      context: context,
-                      builder: (context) => EditNotificationDialog(
-                        schedule: schedule,
-                        onUpdate: () => _loadSchedules(),
-                      ),
-                    );
-                  },
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: schedule.isActive ? AppColors.primaryGoldLight : Colors.grey.shade200,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              schedule.isActive ? "Active" : "Inactive",
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: schedule.isActive ? AppColors.primaryGold : Colors.grey,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          const Spacer(),
-                          Text(
-                            schedule.frequency.displayName,
-                            style: const TextStyle(fontSize: 12, color: AppColors.primaryGold),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        schedule.assetName,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          const Icon(Icons.schedule, size: 14, color: AppColors.black54),
-                          const SizedBox(width: 4),
-                          Text(
-                            "${schedule.scheduledTime.toLocal().toString().split('.').first}",
-                            style: const TextStyle(fontSize: 12, color: AppColors.black54),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            schedule.type == NotificationType.email ? Icons.email :
-                            schedule.type == NotificationType.push ? Icons.notifications_active :
-                            Icons.email,
-                            size: 14,
-                            color: AppColors.primaryGold,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            schedule.type.toString().split('.').last.toUpperCase(),
-                            style: const TextStyle(fontSize: 12, color: AppColors.primaryGold, fontWeight: FontWeight.w500),
-                          ),
-                        ],
-                      ),
-                      if (schedule.recipientEmail != null || schedule.recipientPhone != null) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          schedule.recipientEmail ?? schedule.recipientPhone ?? "",
-                          style: const TextStyle(fontSize: 11, color: AppColors.black54),
-                        ),
-                      ],
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 // ==================== ASSET INVENTORY PAGE ====================
 class AssetInventoryPage extends StatefulWidget {
-  const AssetInventoryPage({super.key});
+  final VoidCallback? onBackToHome;
+  final bool showAppBar; // NEW: Control app bar visibility
+
+  final String? title;
+
+  const AssetInventoryPage({
+    super.key,
+    this.title,
+    this.onBackToHome,
+    this.showAppBar = true, // Default to showing app bar
+  });
 
   @override
   State<AssetInventoryPage> createState() => _AssetInventoryPageState();
@@ -1232,6 +391,9 @@ class AssetInventoryPage extends StatefulWidget {
 class _AssetInventoryPageState extends State<AssetInventoryPage> {
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref("assets");
   final DatabaseReference _trustedContactsRef = FirebaseDatabase.instance.ref("trustedContacts");
+
+
+
 
   List<Asset> _assets = [];
   List<Map<String, dynamic>> _existingContacts = [];
@@ -1599,7 +761,7 @@ class _AssetInventoryPageState extends State<AssetInventoryPage> {
                   GoldAppBar(
                     title: "Add New Asset",
                     leading: IconButton(
-                      icon: const Icon(Icons.close, color: AppColors.black, size: 28),
+                      icon: const Icon(Icons.close, color: AppColors.white, size: 28),
                       onPressed: () => Navigator.pop(context),
                     ),
                     actions: [
@@ -1756,7 +918,7 @@ class _AssetInventoryPageState extends State<AssetInventoryPage> {
                                     ),
                                     const Spacer(),
                                     TextButton.icon(
-                                      onPressed: () => _showAddBeneficiaryDialog(setDialogState),
+                                      onPressed: () => _showAddBeneficiaryDialog(setDialogState, _selectedBeneficiaries),
                                       icon: const Icon(Icons.add_circle, color: AppColors.primaryGold, size: 20),
                                       label: const Text("Add", style: TextStyle(color: AppColors.primaryGold)),
                                     ),
@@ -1883,7 +1045,7 @@ class _AssetInventoryPageState extends State<AssetInventoryPage> {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                   decoration: BoxDecoration(
-                                    color: AppColors.primaryGold,
+                                    color: AppColors.black,
                                     borderRadius: const BorderRadius.only(
                                       topLeft: Radius.circular(14),
                                       topRight: Radius.circular(14),
@@ -1892,12 +1054,12 @@ class _AssetInventoryPageState extends State<AssetInventoryPage> {
                                   child: const Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.notifications_active, color: Colors.white, size: 16),
+                                      Icon(Icons.notifications_active, color: AppColors.primaryGold, size: 16),
                                       SizedBox(width: 6),
                                       Text(
                                         "REQUIRED: Notification Settings",
                                         style: TextStyle(
-                                          color: Colors.white,
+                                          color: AppColors.white,
                                           fontWeight: FontWeight.bold,
                                           fontSize: 12,
                                         ),
@@ -2187,7 +1349,8 @@ class _AssetInventoryPageState extends State<AssetInventoryPage> {
       ),
     );
   }
-// Helper method for section headers
+
+  // Helper method for section headers
   Widget _buildSectionHeader(IconData icon, String title) {
     return Row(
       children: [
@@ -2217,9 +1380,7 @@ class _AssetInventoryPageState extends State<AssetInventoryPage> {
       ],
     );
   }
-
-
-  void _showAddBeneficiaryDialog(Function setDialogState) {
+  void _showAddBeneficiaryDialog(Function setDialogState, List<Beneficiary> currentBeneficiaries) {
     final nameController = TextEditingController();
     final relationshipController = TextEditingController();
     final contactController = TextEditingController();
@@ -2236,10 +1397,7 @@ class _AssetInventoryPageState extends State<AssetInventoryPage> {
             children: [
               GoldAppBar(
                 title: "Add Beneficiary",
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: AppColors.black, size: 28),
-                  onPressed: () => Navigator.pop(context),
-                ),
+                showBackButton: true,
               ),
               Expanded(
                 child: SingleChildScrollView(
@@ -2324,7 +1482,11 @@ class _AssetInventoryPageState extends State<AssetInventoryPage> {
                                   source: "manual",
                                 );
 
-                                setDialogState(() => _selectedBeneficiaries.add(newBeneficiary));
+                                setDialogState(() {
+                                  if (!currentBeneficiaries.any((b) => b.name == newBeneficiary.name)) {
+                                    currentBeneficiaries.add(newBeneficiary);
+                                  }
+                                });
                                 Navigator.pop(context);
                               },
                             ),
@@ -2341,113 +1503,423 @@ class _AssetInventoryPageState extends State<AssetInventoryPage> {
       ),
     );
   }
-
   void _showAssetDetails(Asset asset) {
+    // Create controllers with existing data
+    final descriptionController = TextEditingController(text: asset.description);
+    final estimatedValueController = TextEditingController(text: asset.estimatedValue);
+    final locationController = TextEditingController(text: asset.location);
+    final notesController = TextEditingController(text: asset.notes);
+
+    String selectedAssetType = asset.type;
+    List<Beneficiary> selectedBeneficiaries = List.from(asset.beneficiaries);
+    bool isEditing = false;
+
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        insetPadding: EdgeInsets.zero,
-        child: Container(
-          width: double.infinity,
-          height: double.infinity,
-          color: AppColors.white,
-          child: Column(
-            children: [
-              GoldAppBar(
-                title: asset.description,
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: AppColors.black, size: 28),
-                  onPressed: () => Navigator.pop(context),
-                ),
-                actions: [
-                  IconButton(
-                    icon:  Icon(Icons.add, color: AppColors.black),
-                    onPressed: () {
-                      Navigator.pop(context);
-                      _addNotificationForAsset(asset);
-                    },
-                    tooltip: "Add Notification",
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return Dialog(
+            insetPadding: EdgeInsets.zero,
+            child: Container(
+              width: double.infinity,
+              height: double.infinity,
+              color: AppColors.white,
+              child: Column(
+                children: [
+                  GoldAppBar(
+                    title: isEditing ? "Edit Asset" : asset.description,
+                    showBackButton: true,
+                    actions: [
+                      if (!isEditing) ...[
+                        IconButton(
+                          icon: const Icon(Icons.edit, color: Colors.black),
+                          onPressed: () {
+                            setDialogState(() {
+                              isEditing = true;
+                            });
+                          },
+                          tooltip: "Edit Asset",
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.notification_add, color: Colors.black),
+                          onPressed: () {
+                            Navigator.pop(context);
+                            _addNotificationForAsset(asset);
+                          },
+                          tooltip: "Add Notification",
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete, color: AppColors.red),
+                          onPressed: () {
+                            Navigator.pop(context);
+                            _deleteAsset(asset);
+                          },
+                        ),
+                      ] else ...[
+                        GoldButton(
+                          text: "Save",
+                          icon: Icons.save,
+                          onPressed: () async {
+                            // Validate
+                            if (descriptionController.text.trim().isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("Please enter a description")),
+                              );
+                              return;
+                            }
+
+                            // Update asset
+                            final updatedAsset = Asset(
+                              key: asset.key,
+                              type: selectedAssetType,
+                              description: descriptionController.text.trim(),
+                              estimatedValue: estimatedValueController.text.trim(),
+                              location: locationController.text.trim(),
+                              beneficiaries: selectedBeneficiaries,
+                              notes: notesController.text.trim(),
+                              updatedAt: DateTime.now().toIso8601String(),
+                            );
+
+                            await _updateAsset(updatedAsset);
+
+                            if (mounted && !_isDisposed) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Asset updated successfully!"),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
+
+                            Navigator.pop(context);
+                            await _loadAssets(); // Refresh the list
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, color: AppColors.red),
+                          onPressed: () {
+                            setDialogState(() {
+                              isEditing = false;
+                              // Reset to original values
+                              descriptionController.text = asset.description;
+                              estimatedValueController.text = asset.estimatedValue;
+                              locationController.text = asset.location;
+                              notesController.text = asset.notes;
+                              selectedAssetType = asset.type;
+                              selectedBeneficiaries = List.from(asset.beneficiaries);
+                            });
+                          },
+                          tooltip: "Cancel Edit",
+                        ),
+                      ],
+                    ],
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.delete, color: AppColors.black),
-                    onPressed: () {
-                      Navigator.pop(context);
-                      _deleteAsset(asset);
-                    },
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (!isEditing) ...[
+                            // View Mode
+                            Center(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primaryGoldLight,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(AssetType.getIcon(asset.type), color: AppColors.primaryGold),
+                                    const SizedBox(width: 8),
+                                    Text(asset.type, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryGold)),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+                            const Text(
+                              "Asset Details",
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primaryGold),
+                            ),
+                            const SizedBox(height: 16),
+                            _buildDetailCard(Icons.description, "Description", asset.description),
+                            const SizedBox(height: 12),
+                            _buildDetailCard(Icons.monetization_on, "Estimated Value", asset.estimatedValue.isEmpty ? "Not specified" : asset.estimatedValue),
+                            const SizedBox(height: 12),
+                            _buildDetailCard(Icons.location_on, "Location / Details", asset.location.isEmpty ? "Not specified" : asset.location),
+                            const SizedBox(height: 24),
+                            const Text(
+                              "Beneficiaries",
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primaryGold),
+                            ),
+                            const SizedBox(height: 16),
+                            if (asset.beneficiaries.isEmpty)
+                              GoldCard(
+                                padding: const EdgeInsets.all(32),
+                                child: const Center(child: Text("No beneficiaries assigned to this asset", style: TextStyle(color: AppColors.black54))),
+                              )
+                            else
+                              ...asset.beneficiaries.map((b) => _buildBeneficiaryCard(b)),
+                            const SizedBox(height: 24),
+                            if (asset.notes.isNotEmpty) ...[
+                              const Text(
+                                "Additional Notes",
+                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primaryGold),
+                              ),
+                              const SizedBox(height: 16),
+                              _buildDetailCard(Icons.note, "Notes", asset.notes),
+                            ],
+                          ] else ...[
+                            // Edit Mode
+                            _buildSectionHeader(Icons.category, "Basic Information"),
+                            const SizedBox(height: 12),
+                            Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: AppColors.primaryGold.withOpacity(0.3)),
+                              ),
+                              child: DropdownButtonFormField<String>(
+                                value: selectedAssetType,
+                                items: AssetType.all.map((type) => DropdownMenuItem(
+                                  value: type,
+                                  child: Row(
+                                    children: [
+                                      Icon(AssetType.getIcon(type), size: 20, color: AppColors.primaryGold),
+                                      const SizedBox(width: 8),
+                                      Text(type),
+                                    ],
+                                  ),
+                                )).toList(),
+                                onChanged: (value) => setDialogState(() => selectedAssetType = value!),
+                                decoration: const InputDecoration(
+                                  border: InputBorder.none,
+                                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                  prefixIcon: Icon(Icons.category, color: AppColors.primaryGold),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            GoldFormField(
+                              controller: descriptionController,
+                              label: "Asset Description",
+                              hint: "e.g., Savings Account - GCB Bank",
+                              prefixIcon: Icons.description,
+                              isRequired: true,
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: GoldFormField(
+                                    controller: estimatedValueController,
+                                    label: "Estimated Value",
+                                    hint: "GHS 10,000",
+                                    prefixIcon: Icons.monetization_on,
+                                    keyboardType: TextInputType.number,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: GoldFormField(
+                                    controller: locationController,
+                                    label: "Location",
+                                    hint: "Accra, Ghana",
+                                    prefixIcon: Icons.location_on,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+                            _buildSectionHeader(Icons.family_restroom, "Beneficiaries"),
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: AppColors.grey50,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: AppColors.primaryGold.withOpacity(0.2)),
+                              ),
+                              child: Column(
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Text(
+                                        "Assign beneficiaries to this asset",
+                                        style: TextStyle(color: AppColors.black54, fontSize: 12),
+                                      ),
+                                      const Spacer(),
+                                      TextButton.icon(
+                                        onPressed: () => _showAddBeneficiaryDialog(setDialogState, selectedBeneficiaries),
+                                        icon: const Icon(Icons.add_circle, color: AppColors.primaryGold, size: 20),
+                                        label: const Text("Add", style: TextStyle(color: AppColors.primaryGold)),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  if (_beneficiariesFromContacts.isNotEmpty) ...[
+                                    const Divider(),
+                                    const SizedBox(height: 8),
+                                    Wrap(
+                                      spacing: 8,
+                                      runSpacing: 8,
+                                      children: _beneficiariesFromContacts.map((contact) {
+                                        final isSelected = selectedBeneficiaries.any((b) => b.name == contact.name);
+                                        return ChoiceChip(
+                                          label: Text(contact.name),
+                                          selected: isSelected,
+                                          onSelected: (selected) {
+                                            setDialogState(() {
+                                              if (selected) {
+                                                if (!selectedBeneficiaries.any((b) => b.name == contact.name)) {
+                                                  selectedBeneficiaries.add(contact);
+                                                }
+                                              } else {
+                                                selectedBeneficiaries.removeWhere((b) => b.name == contact.name);
+                                              }
+                                            });
+                                          },
+                                          selectedColor: AppColors.primaryGold,
+                                          backgroundColor: Colors.grey.shade200,
+                                          labelStyle: TextStyle(
+                                            color: isSelected ? Colors.white : AppColors.black87,
+                                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                          ),
+                                          avatar: CircleAvatar(
+                                            radius: 12,
+                                            backgroundColor: AppColors.primaryGoldLight,
+                                            child: Text(
+                                              contact.name[0].toUpperCase(),
+                                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                                            ),
+                                          ),
+                                        );
+                                      }).toList(),
+                                    ),
+                                  ],
+                                  if (selectedBeneficiaries.isNotEmpty) ...[
+                                    const SizedBox(height: 12),
+                                    const Divider(),
+                                    const SizedBox(height: 8),
+                                    ...selectedBeneficiaries.map((beneficiary) => Container(
+                                      margin: const EdgeInsets.only(bottom: 8),
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primaryGoldLight,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          CircleAvatar(
+                                            radius: 16,
+                                            backgroundColor: AppColors.primaryGold,
+                                            child: Text(
+                                              beneficiary.name[0].toUpperCase(),
+                                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(beneficiary.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                                                Text(beneficiary.relationship, style: const TextStyle(fontSize: 11, color: AppColors.black54)),
+                                              ],
+                                            ),
+                                          ),
+                                          if (beneficiary.source != "trusted_contacts")
+                                            GestureDetector(
+                                              onTap: () => setDialogState(() => selectedBeneficiaries.remove(beneficiary)),
+                                              child: Container(
+                                                padding: const EdgeInsets.all(6),
+                                                decoration: BoxDecoration(
+                                                  color: AppColors.redLight,
+                                                  borderRadius: BorderRadius.circular(20),
+                                                ),
+                                                child: const Icon(Icons.close, size: 16, color: AppColors.red),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    )),
+                                  ],
+                                  if (selectedBeneficiaries.isEmpty && _beneficiariesFromContacts.isEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.all(20),
+                                      child: Column(
+                                        children: [
+                                          Icon(Icons.people_outline, size: 40, color: Colors.grey.shade400),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            "No beneficiaries added",
+                                            style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            _buildSectionHeader(Icons.note_add, "Additional Notes"),
+                            const SizedBox(height: 12),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: AppColors.grey50,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: AppColors.primaryGold.withOpacity(0.2)),
+                              ),
+                              child: GoldFormField(
+                                controller: notesController,
+                                label: "Notes",
+                                hint: "Any additional information about this asset...",
+                                prefixIcon: Icons.edit_note,
+                                maxLines: 3,
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 40),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Center(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryGoldLight,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(AssetType.getIcon(asset.type), color: AppColors.primaryGold),
-                              const SizedBox(width: 8),
-                              Text(asset.type, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryGold)),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-
-                      const Text(
-                        "Asset Details",
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primaryGold),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildDetailCard(Icons.description, "Description", asset.description),
-                      const SizedBox(height: 12),
-                      _buildDetailCard(Icons.monetization_on, "Estimated Value", asset.estimatedValue.isEmpty ? "Not specified" : asset.estimatedValue),
-                      const SizedBox(height: 12),
-                      _buildDetailCard(Icons.location_on, "Location / Details", asset.location.isEmpty ? "Not specified" : asset.location),
-                      const SizedBox(height: 24),
-
-                      const Text(
-                        "Beneficiaries",
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primaryGold),
-                      ),
-                      const SizedBox(height: 16),
-                      if (asset.beneficiaries.isEmpty)
-                        GoldCard(
-                          padding: const EdgeInsets.all(32),
-                          child: const Center(child: Text("No beneficiaries assigned to this asset", style: TextStyle(color: AppColors.black54))),
-                        )
-                      else
-                        ...asset.beneficiaries.map((b) => _buildBeneficiaryCard(b)),
-                      const SizedBox(height: 24),
-
-                      if (asset.notes.isNotEmpty) ...[
-                        const Text(
-                          "Additional Notes",
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primaryGold),
-                        ),
-                        const SizedBox(height: 16),
-                        _buildDetailCard(Icons.note, "Notes", asset.notes),
-                      ],
-                      const SizedBox(height: 40),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }
 
+
+  Future<void> _updateAsset(Asset updatedAsset) async {
+    if (_currentUserId == null || updatedAsset.key == null || _isDisposed) return;
+
+    try {
+      await _dbRef
+          .child(_currentUserId!)
+          .child(updatedAsset.key!)
+          .update(updatedAsset.toJson());
+
+      // Refresh the assets list
+      await _loadAssets();
+    } catch (e) {
+      print("Error updating asset: $e");
+      if (mounted && !_isDisposed) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Error updating asset. Please try again."),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
   Widget _buildDetailCard(IconData icon, String label, String value) {
     return GoldCard(
       child: Row(
@@ -2525,16 +1997,21 @@ class _AssetInventoryPageState extends State<AssetInventoryPage> {
     return Scaffold(
       backgroundColor: AppColors.white,
       appBar: GoldAppBar(
-        title: "Asset Inventory",
-        subtitle: "Track what you own. Beneficiaries auto-sync to Trusted Contacts.",
+
+        title: widget.title?? "Asset Inventory",
+        showBackButton: widget.onBackToHome != null,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_active, color: AppColors.black),
+            icon: const Icon(Icons.notifications, color: AppColors.black),
             onPressed: _showNotificationSettings,
             tooltip: "Notification Settings",
           ),
         ],
-      ),
+      ) ,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGold)))
           : _assets.isEmpty
@@ -2561,8 +2038,8 @@ class _AssetInventoryPageState extends State<AssetInventoryPage> {
         child: GridView.builder(
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
+            crossAxisSpacing: 33,
+            mainAxisSpacing: 26,
             childAspectRatio: isTablet ? 1.1 : 0.9,
           ),
           itemCount: _assets.length,
@@ -2629,11 +2106,11 @@ class _AssetInventoryPageState extends State<AssetInventoryPage> {
           },
         ),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: widget.showAppBar ? FloatingActionButton(
         onPressed: _showAddAssetDialog,
         child: const Icon(Icons.add, color: AppColors.black),
         backgroundColor: AppColors.primaryGold,
-      ),
+      ) : null,
     );
   }
 }

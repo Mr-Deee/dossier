@@ -1,4 +1,5 @@
 import 'package:dossier/pages/homepage.dart';
+import 'package:dossier/pages/mainscreen.dart';
 import 'package:dossier/pages/register.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -35,7 +36,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   late Animation<double> _fadeAnimation;
 
   // Define custom colors
-  final Color _primaryColor = const Color(0xFF2563EB); // Blue color
+  final Color _primaryColor = const Color(0xFF3B82F6); // Blue color
   final Color _secondaryColor = const Color(0xFF3B82F6);
 
   @override
@@ -80,7 +81,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                     const SizedBox(height: 20),
 
 
-                    const SizedBox(height: 60),
+                    const SizedBox(height: 50),
 
                     // Logo
                     Center(
@@ -115,7 +116,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                       ),
                     ),
 
-                    const SizedBox(height: 140),
+                    const SizedBox(height: 60),
 
                     // Form Container
                     Container(
@@ -343,7 +344,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(16),
                                     ),
-                                    disabledBackgroundColor: _primaryColor,
+                                    disabledBackgroundColor: Colors.black12,
                                   ),
                                   child: _isLoading
                                       ? const SizedBox(
@@ -503,7 +504,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
 
         if (mounted && !_isDisposed) {
           Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => homepage()),
+            MaterialPageRoute(builder: (context) => MainScreen()),
                 (Route<dynamic> route) => false,
           );
         }

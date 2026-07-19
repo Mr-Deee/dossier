@@ -33,7 +33,7 @@ class _TrustedContactsPageState extends State<TrustedContactsPage> {
     if (userId == null) return;
 
     setState(() => _isLoading = true);
-    
+
     final snapshot = await _dbRef.child(userId).get();
     if (snapshot.exists) {
       final data = snapshot.value as Map<dynamic, dynamic>;
@@ -64,25 +64,25 @@ class _TrustedContactsPageState extends State<TrustedContactsPage> {
       "relationship": _relationshipController.text.trim(),
       "addedAt": DateTime.now().toIso8601String(),
     };
-    
+
     await _dbRef.child(userId).push().set(newContact);
     _clearControllers();
     _loadContacts();
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Trusted contact added"), backgroundColor: Colors.green),
+      SnackBar(content: Text("Trusted contact added"), backgroundColor: Colors.amber.shade800),
     );
   }
 
   Future<void> _deleteContact(String key) async {
     final userId = _getCurrentUserId();
     if (userId == null) return;
-    
+
     await _dbRef.child(userId).child(key).remove();
     _loadContacts();
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Contact removed"), backgroundColor: Colors.red),
+      SnackBar(content: Text("Contact removed"), backgroundColor: Colors.black87),
     );
   }
 
@@ -95,52 +95,98 @@ class _TrustedContactsPageState extends State<TrustedContactsPage> {
 
   void _showAddContactDialog() {
     _clearControllers();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("Add Trusted Contact", style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.white,
+        title: Text("Add Trusted Contact", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: _nameController,
-              decoration: InputDecoration(labelText: "Full Name", border: OutlineInputBorder()),
+              style: TextStyle(color: Colors.black),
+              decoration: InputDecoration(
+                labelText: "Full Name",
+                labelStyle: TextStyle(color: Colors.black),
+                border: OutlineInputBorder(),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.black),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.black, width: 2),
+                ),
+              ),
             ),
             SizedBox(height: 12),
             TextField(
               controller: _emailController,
-              decoration: InputDecoration(labelText: "Email", border: OutlineInputBorder()),
+              style: TextStyle(color: Colors.black),
+              decoration: InputDecoration(
+                labelText: "Email",
+                labelStyle: TextStyle(color:Colors.black),
+                border: OutlineInputBorder(),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.black),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.black, width: 2),
+                ),
+              ),
               keyboardType: TextInputType.emailAddress,
             ),
             SizedBox(height: 12),
             TextField(
               controller: _phoneController,
-              decoration: InputDecoration(labelText: "Phone Number", border: OutlineInputBorder()),
+              style: TextStyle(color: Colors.black),
+              decoration: InputDecoration(
+                labelText: "Phone Number",
+                labelStyle: TextStyle(color: Colors.black),
+                border: OutlineInputBorder(),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.black),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.amber.shade200, width: 2),
+                ),
+              ),
               keyboardType: TextInputType.phone,
             ),
             SizedBox(height: 12),
             TextField(
               controller: _relationshipController,
-              decoration: InputDecoration(labelText: "Relationship", border: OutlineInputBorder()),
+              style: TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                labelText: "Relationship",
+                labelStyle: TextStyle(color:Colors.black),
+                border: OutlineInputBorder(),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.black),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color:Colors.black, width: 2),
+                ),
+              ),
             ),
             SizedBox(height: 16),
             Container(
               padding: EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.blue.shade50,
+                color: Colors.amber,
                 borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.amber.shade300),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("ℹ️ HOW THIS WORKS", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                  Text("ℹ️ HOW THIS WORKS", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.black)),
                   SizedBox(height: 4),
                   Text(
                     "These contacts can REQUEST access to your dossier after your death. "
-                    "Access requires death certificate verification by DOSSIER administrators. "
-                    "They have NO automatic rights to your assets.",
-                    style: TextStyle(fontSize: 11),
+                        "Access requires death certificate verification by DOSSIER administrators. "
+                        "They have NO automatic rights to your assets.",
+                    style: TextStyle(fontSize: 11, color: Colors.black),
                   ),
                 ],
               ),
@@ -148,17 +194,25 @@ class _TrustedContactsPageState extends State<TrustedContactsPage> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text("Cancel")),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Cancel", style: TextStyle(color: Colors.amber.shade300)),
+          ),
           ElevatedButton(
             onPressed: () async {
               if (_nameController.text.trim().isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Please enter a name")));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("Please enter a name"), backgroundColor: Colors.amber.shade800),
+                );
                 return;
               }
               await _addContact();
               Navigator.pop(context);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber.shade600,
+              foregroundColor: Colors.black,
+            ),
             child: Text("Add Contact"),
           ),
         ],
@@ -169,21 +223,27 @@ class _TrustedContactsPageState extends State<TrustedContactsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text("Trusted Contacts"),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: Text(
+          "Trusted Contacts",
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(40),
           child: Container(
             padding: EdgeInsets.all(8),
-            color: Colors.green.shade50,
+            color: Colors.amber.shade900.withOpacity(0.3),
             child: Row(
               children: [
-                Icon(Icons.verified_user, color: Colors.green, size: 16),
+                Icon(Icons.verified_user, color: Colors.black, size: 16),
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     "These people can request access to your information when needed.",
-                    style: TextStyle(fontSize: 11),
+                    style: TextStyle(fontSize: 11, color: Colors.black),
                   ),
                 ),
               ],
@@ -192,56 +252,83 @@ class _TrustedContactsPageState extends State<TrustedContactsPage> {
         ),
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.amber.shade300)))
           : _contacts.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.people, size: 80, color: Colors.grey),
-                      SizedBox(height: 16),
-                      Text("No trusted contacts yet", style: TextStyle(fontSize: 18)),
-                      SizedBox(height: 8),
-                      Text("Add family members or legal representatives who should have access"),
-                    ],
-                  ),
-                )
-              : ListView.builder(
-                  itemCount: _contacts.length,
-                  itemBuilder: (context, index) {
-                    final contact = _contacts[index];
-                    return Card(
-                      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      elevation: 2,
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: Colors.blue.shade100,
-                          child: Text(contact["name"][0].toUpperCase(), style: TextStyle(fontWeight: FontWeight.bold)),
-                        ),
-                        title: Text(contact["name"], style: TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (contact["relationship"].isNotEmpty)
-                              Text(contact["relationship"], style: TextStyle(fontSize: 12)),
-                            if (contact["email"].isNotEmpty)
-                              Text(contact["email"], style: TextStyle(fontSize: 11, color: Colors.grey)),
-                            if (contact["phone"].isNotEmpty)
-                              Text(contact["phone"], style: TextStyle(fontSize: 11, color: Colors.grey)),
-                          ],
-                        ),
-                        trailing: IconButton(
-                          icon: Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => _deleteContact(contact["key"]),
-                        ),
-                      ),
-                    );
-                  },
+          ? Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.people, size: 80, color: Colors.amber.shade300.withOpacity(0.5)),
+            SizedBox(height: 16),
+            Text(
+              "No trusted contacts yet",
+              style: TextStyle(fontSize: 18, color: Colors.amber.shade300),
+            ),
+            SizedBox(height: 8),
+            Text(
+              "Add family members or legal representatives who should have access",
+              style: TextStyle(color: Colors.amber.shade100.withOpacity(0.7)),
+            ),
+          ],
+        ),
+      )
+          : ListView.builder(
+        itemCount: _contacts.length,
+        itemBuilder: (context, index) {
+          final contact = _contacts[index];
+          return Card(
+            margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: Colors.amber,
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: Colors.amber.shade300.withOpacity(0.3)),
+            ),
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundColor: Colors.amber.shade300.withOpacity(0.2),
+                child: Text(
+                  contact["name"][0].toUpperCase(),
+                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
                 ),
+              ),
+              title: Text(
+                contact["name"],
+                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (contact["relationship"].isNotEmpty)
+                    Text(
+                      contact["relationship"],
+                      style: TextStyle(fontSize: 12, color: Colors.black),
+                    ),
+                  if (contact["email"].isNotEmpty)
+                    Text(
+                      contact["email"],
+                      style: TextStyle(fontSize: 11, color: Colors.amber.shade100.withOpacity(0.7)),
+                    ),
+                  if (contact["phone"].isNotEmpty)
+                    Text(
+                      contact["phone"],
+                      style: TextStyle(fontSize: 11, color: Colors.black.withOpacity(0.7)),
+                    ),
+                ],
+              ),
+              trailing: IconButton(
+                icon: Icon(Icons.delete, color: Colors.black),
+                onPressed: () => _deleteContact(contact["key"]),
+              ),
+            ),
+          );
+        },
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddContactDialog,
-        child: Icon(Icons.person_add),
-        backgroundColor: Colors.blue,
+        child: Icon(Icons.person_add, color: Colors.black),
+        backgroundColor: Colors.amber.shade300,
+        elevation: 4,
       ),
     );
   }

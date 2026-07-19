@@ -1,4 +1,4 @@
-// lib/main_pages/homepage.dart - Updated with animated DOSSIER. and tap theme toggle
+// lib/main_pages/homepage.dart - Amber / Black / White theme
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -13,6 +13,15 @@ import 'settings_page.dart';
 import 'contact_us.dart';
 import 'access_request.dart';
 
+// Shared palette
+class _Palette {
+  static const Color amber = Color(0xFFF5A623); // primary accent
+  static const Color amberDark = Color(0xFFB6790F);
+  static const Color amberLight = Color(0xFFFFE9C2);
+  static const Color black = Color(0xFF111111);
+  static const Color white = Colors.white;
+}
+
 class homepage extends StatefulWidget {
   const homepage({super.key});
 
@@ -24,11 +33,11 @@ class _homepageState extends State<homepage> {
   int _selectedIndex = 0;
   String _userName = "";
 
-  final List<Widget> _pages = [
+  List<Widget> get _pages => [
     const HomeContent(),
-     AssetInventoryPage(),
-     LegacyJournalPage(),
-     TrustedContactsPage(),
+    AssetInventoryPage(onBackToHome: () => setState(() => _selectedIndex = 0)),
+    LegacyJournalPage(),
+    TrustedContactsPage(),
   ];
 
   @override
@@ -50,13 +59,15 @@ class _homepageState extends State<homepage> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    final theme = Theme.of(context);
+    final isDark = themeProvider.isDarkMode;
 
     return Scaffold(
+      backgroundColor: isDark ? _Palette.black : _Palette.white,
       appBar: AppBar(
+        backgroundColor: isDark ? _Palette.black : _Palette.white,
+        elevation: 0,
         title: const AnimatedDossierTitle(),
         actions: [
-          // Replace Switch with IconButton for theme toggle
           IconButton(
             onPressed: () {
               themeProvider.toggleTheme(!themeProvider.isDarkMode);
@@ -66,12 +77,14 @@ class _homepageState extends State<homepage> {
               child: Icon(
                 themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
                 key: ValueKey(themeProvider.isDarkMode),
-                color: themeProvider.isDarkMode ? Colors.amber : Colors.black,
+                color: _Palette.amber,
               ),
             ),
             tooltip: themeProvider.isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode",
           ),
           PopupMenuButton<String>(
+            color: isDark ? const Color(0xFF1C1C1C) : _Palette.white,
+            icon: Icon(Icons.more_vert, color: isDark ? _Palette.white : _Palette.black),
             onSelected: (value) {
               if (value == 'logout') {
                 _logout();
@@ -88,9 +101,27 @@ class _homepageState extends State<homepage> {
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(value: 'settings', child: ListTile(leading: Icon(Icons.settings), title: Text("Settings"))),
-              const PopupMenuItem(value: 'contact', child: ListTile(leading: Icon(Icons.contact_support), title: Text("Contact Us"))),
-              const PopupMenuItem(value: 'logout', child: ListTile(leading: Icon(Icons.logout), title: Text("Logout"))),
+              PopupMenuItem(
+                value: 'settings',
+                child: ListTile(
+                  leading: const Icon(Icons.settings, color: _Palette.amber),
+                  title: Text("Settings", style: TextStyle(color: isDark ? _Palette.white : _Palette.black)),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'contact',
+                child: ListTile(
+                  leading: const Icon(Icons.contact_support, color: _Palette.amber),
+                  title: Text("Contact Us", style: TextStyle(color: isDark ? _Palette.white : _Palette.black)),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'logout',
+                child: ListTile(
+                  leading: const Icon(Icons.logout, color: _Palette.amber),
+                  title: Text("Logout", style: TextStyle(color: isDark ? _Palette.white : _Palette.black)),
+                ),
+              ),
             ],
           ),
         ],
@@ -107,7 +138,7 @@ class _homepageState extends State<homepage> {
   }
 }
 
-// Animated Dossier Title with color-changing dot
+// Animated Dossier Title with amber-shade pulsing dot
 class AnimatedDossierTitle extends StatefulWidget {
   const AnimatedDossierTitle({super.key});
 
@@ -118,7 +149,13 @@ class AnimatedDossierTitle extends StatefulWidget {
 class _AnimatedDossierTitleState extends State<AnimatedDossierTitle> with SingleTickerProviderStateMixin {
   late AnimationController _colorController;
   int _colorIndex = 0;
-  final List<Color> _dotColors = [Colors.red, Colors.amber, Colors.red, Colors.orange, Colors.red];
+  final List<Color> _dotColors = [
+    _Palette.amber,
+    _Palette.amberDark,
+    _Palette.amber,
+    _Palette.amberLight,
+    _Palette.amberDark,
+  ];
 
   @override
   void initState() {
@@ -155,7 +192,8 @@ class _AnimatedDossierTitleState extends State<AnimatedDossierTitle> with Single
             style: theme.textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.bold,
               fontSize: 22,
-              color: theme.brightness == Brightness.dark ? Colors.white : Colors.black,
+              letterSpacing: 0.5,
+              color: theme.brightness == Brightness.dark ? _Palette.white : _Palette.black,
             ),
           ),
           WidgetSpan(
@@ -206,42 +244,41 @@ class _HomeContentState extends State<HomeContent> {
   int _totalDocuments = 0;
   bool _isLoading = true;
 
-  // Dynamic Island / Carousel variables
   late PageController _pageController;
   int _currentPage = 0;
   Timer? _carouselTimer;
 
-  // Carousel items
+  // Carousel items — amber/black tones only, icon differentiates meaning
   final List<CarouselItem> _carouselItems = [
     CarouselItem(
       icon: Icons.warning_amber_rounded,
-      title: "⚠️ LEGAL NOTICE",
+      title: "LEGAL NOTICE",
       message: "DOSSIER is an information storage tool only. Not a legal will. Access requires death certificate verification.",
-      color: Colors.amber,
+      color: _Palette.black,
     ),
     CarouselItem(
       icon: Icons.security,
-      title: "🔒 YOUR DATA IS SAFE",
+      title: "YOUR DATA IS SAFE",
       message: "All your information is encrypted and stored securely. Only you can grant access to trusted contacts.",
-      color: Colors.green,
+      color: _Palette.amber,
     ),
     CarouselItem(
       icon: Icons.family_restroom,
-      title: "👨‍👩‍👧‍👦 LEGACY PLANNING",
+      title: "LEGACY PLANNING",
       message: "Create a lasting legacy for your loved ones. Store important messages, assets, and instructions.",
-      color: Colors.blue,
+      color: _Palette.amberDark,
     ),
     CarouselItem(
       icon: Icons.verified,
-      title: "✅ ACCESS PROTOCOL",
+      title: "ACCESS PROTOCOL",
       message: "Access requires death certificate verification. Your information remains private until then.",
-      color: Colors.purple,
+      color: _Palette.black,
     ),
     CarouselItem(
       icon: Icons.tips_and_updates,
-      title: "💡 PRO TIP",
+      title: "PRO TIP",
       message: "Regularly update your information and inform trusted contacts about DOSSIER's existence.",
-      color: Colors.orange,
+      color: _Palette.amber,
     ),
   ];
 
@@ -280,13 +317,11 @@ class _HomeContentState extends State<HomeContent> {
     setState(() => _isLoading = true);
 
     try {
-      // Load user name
       final nameSnapshot = await FirebaseDatabase.instance.ref("users/${user.uid}/username").get();
       if (nameSnapshot.exists) {
         setState(() => _userName = nameSnapshot.value as String);
       }
 
-      // Load pending access requests
       final requestsSnapshot = await FirebaseDatabase.instance
           .ref("accessRequests")
           .orderByChild("userId")
@@ -300,7 +335,6 @@ class _HomeContentState extends State<HomeContent> {
         });
       }
 
-      // Load all counts
       await _loadAssetsCount(user.uid);
       await _loadLegacyEntriesCount(user.uid);
       await _loadContactsCount(user.uid);
@@ -384,8 +418,10 @@ class _HomeContentState extends State<HomeContent> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
 
     return RefreshIndicator(
+      color: _Palette.amber,
       onRefresh: _loadData,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -394,23 +430,24 @@ class _HomeContentState extends State<HomeContent> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Greeting Section
-            Text(
-              '${_getSalutation()}, ${_userName.isEmpty ? "User" : _userName}!',
-              style: theme.textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                fontSize: 24,
-              ),
-            ),
+            // Text(
+            //   '${_getSalutation()}, ${_userName.isEmpty ? "User" : _userName}!',
+            //   style: theme.textTheme.headlineMedium?.copyWith(
+            //     fontWeight: FontWeight.bold,
+            //     fontSize: 24,
+            //     color: isDark ? _Palette.white : _Palette.black,
+            //   ),
+            // ),
             const SizedBox(height: 8),
             Text(
               "Your legacy organizer. Keep everything your family needs to know.",
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                color: (isDark ? _Palette.white : _Palette.black).withOpacity(0.6),
               ),
             ),
             const SizedBox(height: 24),
 
-            // Dynamic Island / Rotating Carousel
+            // Rotating Carousel
             SizedBox(
               height: 120,
               child: PageView.builder(
@@ -423,23 +460,17 @@ class _HomeContentState extends State<HomeContent> {
                 itemCount: _carouselItems.length,
                 itemBuilder: (context, index) {
                   final item = _carouselItems[index];
+                  final onBlack = item.color == _Palette.black;
                   return AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
                     margin: const EdgeInsets.symmetric(horizontal: 4),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          item.color.withOpacity(0.15),
-                          item.color.withOpacity(0.05),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      border: Border.all(color: item.color, width: 1.5),
+                      color: onBlack ? _Palette.black : (isDark ? const Color(0xFF1C1C1C) : _Palette.white),
+                      border: Border.all(color: _Palette.amber, width: 1.5),
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: item.color.withOpacity(0.3),
+                          color: _Palette.amber.withOpacity(0.25),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -452,10 +483,10 @@ class _HomeContentState extends State<HomeContent> {
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: item.color.withOpacity(0.2),
+                              color: _Palette.amber.withOpacity(0.18),
                               borderRadius: BorderRadius.circular(16),
                             ),
-                            child: Icon(item.icon, color: item.color, size: 28),
+                            child: Icon(item.icon, color: _Palette.amber, size: 28),
                           ),
                           const SizedBox(width: 16),
                           Expanded(
@@ -468,7 +499,8 @@ class _HomeContentState extends State<HomeContent> {
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 13,
-                                    color: item.color,
+                                    letterSpacing: 0.4,
+                                    color: onBlack ? _Palette.amber : _Palette.amberDark,
                                   ),
                                 ),
                                 const SizedBox(height: 6),
@@ -476,7 +508,9 @@ class _HomeContentState extends State<HomeContent> {
                                   item.message,
                                   style: TextStyle(
                                     fontSize: 11,
-                                    color: theme.colorScheme.onSurface.withOpacity(0.7),
+                                    color: onBlack
+                                        ? Colors.white.withOpacity(0.85)
+                                        : (isDark ? Colors.white70 : _Palette.black.withOpacity(0.7)),
                                     height: 1.3,
                                   ),
                                   maxLines: 3,
@@ -499,15 +533,16 @@ class _HomeContentState extends State<HomeContent> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
                 _carouselItems.length,
-                    (index) => Container(
+                    (index) => AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
                   margin: const EdgeInsets.symmetric(horizontal: 4),
                   width: 8,
                   height: 8,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: _currentPage == index
-                        ? Colors.amber
-                        : Colors.grey.withOpacity(0.4),
+                        ? _Palette.amber
+                        : (isDark ? Colors.white24 : Colors.black26),
                   ),
                 ),
               ),
@@ -515,11 +550,10 @@ class _HomeContentState extends State<HomeContent> {
 
             const SizedBox(height: 24),
 
-            // Loading Indicator
             if (_isLoading)
-              const Center(child: CircularProgressIndicator())
+              const Center(child: CircularProgressIndicator(color: _Palette.amber))
             else ...[
-              // Pending Requests Card (if any)
+              // Pending Requests Card
               if (_pendingRequests > 0)
                 GestureDetector(
                   onTap: () {
@@ -532,27 +566,27 @@ class _HomeContentState extends State<HomeContent> {
                     padding: const EdgeInsets.all(16),
                     margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.1),
-                      border: Border.all(color: Colors.red, width: 1),
+                      color: _Palette.black,
+                      border: Border.all(color: _Palette.amber, width: 1.5),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.notification_important, color: Colors.red, size: 30),
+                        const Icon(Icons.notification_important, color: _Palette.amber, size: 30),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             "$_pendingRequests pending access request(s) awaiting your approval",
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
                           ),
                         ),
-                        const Icon(Icons.arrow_forward_ios, size: 16),
+                        const Icon(Icons.arrow_forward_ios, size: 16, color: _Palette.amber),
                       ],
                     ),
                   ),
                 ),
 
-              // Stats Cards Row - Tappable navigation cards
+              // Stats Cards Row
               Row(
                 children: [
                   Expanded(
@@ -561,10 +595,12 @@ class _HomeContentState extends State<HomeContent> {
                       title: "Assets",
                       value: _totalAssets.toString(),
                       subtitle: "items tracked",
-                      color: Colors.blue,
-                      themeProvider: themeProvider,
+                      isDark: isDark,
                       onTap: () {
-                        _navigateToPage(1);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const AssetInventoryPage()),
+                        );
                       },
                     ),
                   ),
@@ -575,11 +611,12 @@ class _HomeContentState extends State<HomeContent> {
                       title: "Legacy",
                       value: _totalLegacyEntries.toString(),
                       subtitle: "messages saved",
-                      color: Colors.purple,
-                      themeProvider: themeProvider,
+                      isDark: isDark,
                       onTap: () {
-                        _navigateToPage(2);
-                      },
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => LegacyJournalPage()),
+                        );                      },
                     ),
                   ),
                 ],
@@ -593,11 +630,12 @@ class _HomeContentState extends State<HomeContent> {
                       title: "Contacts",
                       value: _totalContacts.toString(),
                       subtitle: "trusted people",
-                      color: Colors.green,
-                      themeProvider: themeProvider,
+                      isDark: isDark,
                       onTap: () {
-                        _navigateToPage(3);
-                      },
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => TrustedContactsPage()),
+                        );                      },
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -607,8 +645,7 @@ class _HomeContentState extends State<HomeContent> {
                       title: "Documents",
                       value: _totalDocuments.toString(),
                       subtitle: "files referenced",
-                      color: Colors.orange,
-                      themeProvider: themeProvider,
+                      isDark: isDark,
                       onTap: () {
                         Navigator.push(
                           context,
@@ -629,10 +666,12 @@ class _HomeContentState extends State<HomeContent> {
                   children: [
                     Text(
                       "Recent Activity",
-                      style: theme.textTheme.titleLarge,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: isDark ? _Palette.white : _Palette.black,
+                      ),
                     ),
                     const SizedBox(height: 16),
-                    _buildRecentActivityCard(),
+                    // _buildRecentActivityCard(isDark),
                   ],
                 ),
             ],
@@ -642,47 +681,55 @@ class _HomeContentState extends State<HomeContent> {
     );
   }
 
-  Widget _buildRecentActivityCard() {
+  Widget _buildRecentActivityCard(bool isDark) {
+    final textColor = isDark ? _Palette.white : _Palette.black;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
+        color: isDark ? const Color(0xFF1C1C1C) : _Palette.amberLight.withOpacity(0.4),
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _Palette.amber.withOpacity(0.4)),
       ),
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("📦 You have $_totalAssets asset(s) tracked"),
+              Text("You have $_totalAssets asset(s) tracked", style: TextStyle(color: textColor)),
               if (_totalAssets > 0)
                 TextButton(
-                  onPressed: () => _navigateToPage(1),
-                  child: const Text("View All"),
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const AssetInventoryPage()),
+                    );
+                  },
+                  child: const Text("View All", style: TextStyle(color: _Palette.amberDark)),
                 ),
             ],
           ),
-          const Divider(),
+          Divider(color: _Palette.amber.withOpacity(0.3)),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("📝 $_totalLegacyEntries legacy message(s) saved"),
+              Text("$_totalLegacyEntries legacy message(s) saved", style: TextStyle(color: textColor)),
               if (_totalLegacyEntries > 0)
                 TextButton(
                   onPressed: () => _navigateToPage(2),
-                  child: const Text("View All"),
+                  child: const Text("View All", style: TextStyle(color: _Palette.amberDark)),
                 ),
             ],
           ),
-          const Divider(),
+          Divider(color: _Palette.amber.withOpacity(0.3)),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("👥 $_totalContacts trusted contact(s) added"),
+              Text("$_totalContacts trusted contact(s) added", style: TextStyle(color: textColor)),
               if (_totalContacts > 0)
                 TextButton(
                   onPressed: () => _navigateToPage(3),
-                  child: const Text("View All"),
+                  child: const Text("View All", style: TextStyle(color: _Palette.amberDark)),
                 ),
             ],
           ),
@@ -705,37 +752,41 @@ class _HomeContentState extends State<HomeContent> {
     required String title,
     required String value,
     required String subtitle,
-    required Color color,
-    required ThemeProvider themeProvider,
+    required bool isDark,
     required VoidCallback onTap,
   }) {
+    final textColor = isDark ? _Palette.white : _Palette.black;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: themeProvider.isDarkMode ? Colors.grey[800] : Colors.grey[100],
+          color: isDark ? const Color(0xFF1C1C1C) : _Palette.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: themeProvider.isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
-            width: 1,
-          ),
+          border: Border.all(color: _Palette.amber.withOpacity(0.5), width: 1),
         ),
         child: Column(
           children: [
-            Icon(icon, size: 32, color: color),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: _Palette.amber.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, size: 26, color: _Palette.amberDark),
+            ),
             const SizedBox(height: 8),
             Text(
               value,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24, color: textColor),
             ),
             Text(
               title,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: textColor),
             ),
             Text(
               subtitle,
-              style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+              style: TextStyle(fontSize: 10, color: textColor.withOpacity(0.5)),
             ),
           ],
         ),
@@ -752,13 +803,13 @@ class _HomeContentState extends State<HomeContent> {
             width: 40,
             height: 40,
             decoration: const BoxDecoration(
-              color: Colors.amber,
+              color: _Palette.amber,
               shape: BoxShape.circle,
             ),
             child: Center(
               child: Text(
                 number,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: _Palette.black),
               ),
             ),
           ),
