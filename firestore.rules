@@ -1,0 +1,157 @@
+rules_version = '2';
+
+// The Dossier — Firestore security rules.
+//
+// Two layers protect user data:
+//   1. Cryptography: every record is AES-256-GCM ciphertext produced on the
+//      device. These rules additionally REJECT any record write that is not
+//      shaped like ciphertext, so plaintext can never be stored by mistake.
+//   2. Access control: only the owner can read their records. A confidant can
+//      read the categories they were granted ONLY after the server (Cloud
+//      Function, after verification + objection period) marks the grant
+//      "released". Clients can never set "released" themselves.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isUser(uid) { return signedIn() && request.auth.uid == uid; }
+    // Email verification is not required to use the app; any signed-in user may write their own data.
+    function verified() { return signedIn(); }
+    function isVerifier() { return signedIn() && request.auth.token.verifier == true; }
+
+    function grantPath(owner) {
+      return /databases/$(database)/documents/users/$(owner)/grants/$(request.auth.uid);
+    }
+    function hasReleasedGrant(owner) {
+      return signedIn() && exists(grantPath(owner)) && get(grantPath(owner)).data.status == 'released';
+    }
+
+    function isCiphertext(v) {          // g1.<nonce>.<ciphertext>.<mac>
+      return v is string && v.size() < 900000
+        && v.matches('^g1\\.[A-Za-z0-9_-]{16}\\.[A-Za-z0-9_-]*\\.[A-Za-z0-9_-]{22}$');
+    }
+    function isSealed(v) {              // x1.<ephemeral public key>.<g1 ciphertext>
+      return v is string && v.size() < 20000 && v.matches('^x1\\.[A-Za-z0-9_-]{43}\\.g1\\..+$');
+    }
+    function validCategory(c) {
+      return c in ['life', 'wealth', 'vault', 'legacy', 'family', 'succession'];
+    }
+
+    // ---------------------------------------------------------------- users
+    match /users/{uid} {
+      allow read, delete: if isUser(uid);
+      allow create, update: if isUser(uid) && verified()
+        && (!('mkByPassphrase' in request.resource.data) || isCiphertext(request.resource.data.mkByPassphrase))
+        && (!('mkByRecovery' in request.resource.data) || isCiphertext(request.resource.data.mkByRecovery))
+        && (!('keyring' in request.resource.data) || isCiphertext(request.resource.data.keyring));
+
+      // Encrypted records. Only `cat` (which pillar) and timestamps are visible to the server.
+      match /records/{rid} {
+        allow read: if isUser(uid)
+          || (hasReleasedGrant(uid) && resource.data.cat in get(grantPath(uid)).data.categories);
+        allow create, update: if isUser(uid) && verified()
+          && request.resource.data.keys().hasOnly(['cat', 'v', 'blob', 'createdAt', 'updatedAt'])
+          && validCategory(request.resource.data.cat)
+          && isCiphertext(request.resource.data.blob);
+        allow delete: if isUser(uid);
+      }
+
+      // Category keys sealed to a confidant's public key. Hidden from the
+      // confidant until released by the server.
+      match /grants/{granteeUid} {
+        allow read: if isUser(uid)
+          || (signedIn() && request.auth.uid == granteeUid && resource.data.status == 'released');
+        allow create, update: if isUser(uid) && verified()
+          && granteeUid != uid
+          && request.resource.data.ownerUid == uid
+          && request.resource.data.granteeUid == granteeUid
+          && request.resource.data.status == 'sealed'
+          && isSealed(request.resource.data.sealedKeys)
+          && request.resource.data.categories is list
+          && request.resource.data.triggers is list
+          && request.resource.data.triggers.hasOnly(['death', 'incapacity']);
+        allow delete: if isUser(uid);
+      }
+
+      // Append-only activity log.
+      match /audit/{id} {
+        allow read: if isUser(uid);
+        allow create: if signedIn()
+          && (isUser(uid) || hasReleasedGrant(uid))
+          && request.resource.data.actor == request.auth.uid
+          && request.resource.data.at == request.time
+          && request.resource.data.keys().hasOnly(['at', 'actor', 'action', 'target']);
+        allow update, delete: if false;
+      }
+
+      // Written by Cloud Functions only.
+      match /notifications/{id} {
+        allow read, delete: if isUser(uid);
+        allow update: if isUser(uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+        allow create: if false;
+      }
+    }
+
+    // ------------------------------------------------------------ directory
+    // sha256(lowercase email) -> { uid, publicKey }. Lets a user find a
+    // confidant's public key without exposing emails. Cannot be listed.
+    match /directory/{emailHash} {
+      allow get: if verified();
+      allow list: if false;
+      allow create, update: if verified()
+        && emailHash == hashing.sha256(request.auth.token.email.lower()).toHexString().lower()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.publicKey is string
+        && request.resource.data.publicKey.size() == 43;
+      allow delete: if verified() && resource.data.uid == request.auth.uid;
+    }
+
+    // ---------------------------------------------------------- nominations
+    // Tells a confidant they were named. Owner's name is sealed to them.
+    match /nominations/{id} {
+      allow read: if signedIn()
+        && (resource.data.ownerUid == request.auth.uid || resource.data.granteeUid == request.auth.uid);
+      allow create, update: if verified()
+        && request.resource.data.ownerUid == request.auth.uid
+        && id == request.auth.uid + '_' + request.resource.data.granteeUid
+        && isSealed(request.resource.data.ownerName);
+      allow delete: if signedIn()
+        && (resource.data.ownerUid == request.auth.uid || resource.data.granteeUid == request.auth.uid);
+    }
+
+    // ------------------------------------------------------- access requests
+    // The Legacy Switch. Clients may only: create (named confidant), object
+    // (owner), cancel (requester). Approval/rejection happens in Cloud Functions.
+    match /accessRequests/{id} {
+      function nominationPath(owner) {
+        return /databases/$(database)/documents/nominations/$(owner + '_' + request.auth.uid);
+      }
+      allow read: if signedIn()
+        && (resource.data.requesterUid == request.auth.uid
+            || resource.data.ownerUid == request.auth.uid
+            || isVerifier());
+      allow create: if verified()
+        && request.resource.data.keys().hasOnly(
+             ['ownerUid', 'requesterUid', 'circumstance', 'statement', 'evidencePath', 'status', 'createdAt'])
+        && request.resource.data.requesterUid == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.statement is string && request.resource.data.statement.size() < 5000
+        && exists(nominationPath(request.resource.data.ownerUid))
+        && request.resource.data.circumstance in get(nominationPath(request.resource.data.ownerUid)).data.triggers;
+      allow update: if signedIn() && resource.data.status == 'pending' && (
+          (resource.data.ownerUid == request.auth.uid
+            && request.resource.data.status == 'objected'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'objectionReason', 'decidedAt']))
+          || (resource.data.requesterUid == request.auth.uid
+            && request.resource.data.status == 'cancelled'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'decidedAt'])));
+      allow delete: if false;
+    }
+
+    // Trigger Email extension queue (optional). Server-only.
+    match /mail/{id} {
+      allow read, write: if false;
+    }
+  }
+}

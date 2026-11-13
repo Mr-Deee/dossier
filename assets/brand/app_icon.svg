@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024"><defs><filter id="ink" x="-10%" y="-10%" width="120%" height="120%">
+  <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="n"/>
+  <feDisplacementMap in="SourceGraphic" in2="n" scale="3.5" xChannelSelector="R" yChannelSelector="G" result="d"/>
+  <feTurbulence type="fractalNoise" baseFrequency="0.35" numOctaves="3" seed="3" result="n2"/>
+  <feColorMatrix in="n2" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.5 1.45" result="mask"/>
+  <feComposite in="d" in2="mask" operator="in"/>
+</filter>
+<linearGradient id="manilaBack" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E8941A"/><stop offset="1" stop-color="#C97C0A"/></linearGradient>
+<linearGradient id="manilaFront" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFC861"/><stop offset="1" stop-color="#F5A623"/></linearGradient>
+<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#16263D"/><stop offset="1" stop-color="#0B1422"/></linearGradient>
+</defs><rect width="1024" height="1024" fill="url(#bg)"/>
+ <g transform="translate(112,240) scale(2.0)">
+  <path d="M 0 40 Q 0 28 12 28 H 120 Q 130 28 136 18 L 144 6 Q 148 0 158 0 H 248 Q 258 0 262 8 L 268 20 Q 272 28 282 28 H 388 Q 400 28 400 40 V 308 Q 400 320 388 320 H 12 Q 0 320 0 308 Z" fill="url(#manilaBack)"/>
+  <rect x="22" y="44" width="352" height="250" rx="4" fill="#F4EEDF" transform="rotate(-2 200 170)"/>
+  <path d="M 0 92 Q 0 80 12 80 H 388 Q 400 80 400 92 V 308 Q 400 320 388 320 H 12 Q 0 320 0 308 Z" fill="url(#manilaFront)"/>
+  <rect x="28" y="108" width="190" height="62" rx="3" fill="#FBF6EA" stroke="#C97C0A" stroke-width="2"/>
+  <rect x="42" y="124" width="120" height="9" fill="#1B1B1B"/>
+  <rect x="42" y="144" width="72" height="9" fill="#1B1B1B"/>
+  <rect x="122" y="144" width="80" height="9" fill="#1B1B1B" opacity="0.35"/>
+  <path d="M 318 -26 V 56 Q 318 74 336 74 Q 354 74 354 56 V -14 Q 354 -24 344 -24 Q 334 -24 334 -14 V 50" fill="none" stroke="#8D949C" stroke-width="7" stroke-linecap="round"/><g transform="translate(270,215)"><g filter="url(#ink)" transform="rotate(-9)">
+    <rect x="-75.0" y="-75.0" width="150" height="150" rx="12.0" fill="none" stroke="#A3261C" stroke-width="13.5"/>
+    <text x="0" y="45.0" text-anchor="middle" font-family="FreeMono" font-weight="bold" font-size="132.0" fill="#A3261C">D</text></g></g></g></svg>

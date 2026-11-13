@@ -1,0 +1,43 @@
+rules_version = '2';
+
+// The Dossier — Cloud Storage rules.
+// Vault files are AES-256-GCM ciphertext produced on the device; the bucket
+// never receives plaintext documents. Evidence for access requests is the one
+// exception (the verification team must be able to read it).
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function grantPath(owner) {
+      return /databases/(default)/documents/users/$(owner)/grants/$(request.auth.uid);
+    }
+
+    match /users/{uid}/files/{cat}/{file} {
+      allow read: if request.auth != null && (
+        request.auth.uid == uid
+        || (firestore.exists(grantPath(uid))
+            && firestore.get(grantPath(uid)).data.status == 'released'
+            && cat in firestore.get(grantPath(uid)).data.categories));
+      allow create: if request.auth != null
+        && request.auth.uid == uid
+        && file.matches('^[0-9a-f-]{36}\\.bin$')
+        && request.resource.size < 26 * 1024 * 1024
+        && request.resource.contentType == 'application/octet-stream';
+      allow update: if false;   // files are immutable; new versions get new ids
+      allow delete: if request.auth != null && request.auth.uid == uid;
+    }
+
+    match /evidence/{requester}/{requestId}/{file} {
+      allow create: if request.auth != null
+        && request.auth.uid == requester
+        && request.resource.size < 15 * 1024 * 1024
+        && request.resource.contentType.matches('application/pdf|image/.*|application/octet-stream');
+      allow read: if request.auth != null
+        && (request.auth.uid == requester || request.auth.token.verifier == true);
+      allow update, delete: if false;
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

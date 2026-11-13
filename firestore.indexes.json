@@ -1,0 +1,26 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "lifeCheck.enabled", "order": "ASCENDING" },
+        { "fieldPath": "lifeCheck.nextDue", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": [
+    {
+      "collectionGroup": "grants",
+      "fieldPath": "granteeUid",
+      "indexes": [
+        { "order": "ASCENDING", "queryScope": "COLLECTION_GROUP" }
+      ]
+    },
+    {
+      "collectionGroup": "records",
+      "fieldPath": "blob",
+      "indexes": []
+    }
+  ]
+}
