@@ -238,7 +238,7 @@ class _RecordFormScreenState extends State<RecordFormScreen> {
         final choice = values[f.key] as String?;
         final choices = [...f.options, if (choice != null && !f.options.contains(choice)) choice];
         return DropdownButtonFormField<String>(
-          value: choice,
+          initialValue: choice,
           isExpanded: true,
           decoration: InputDecoration(labelText: label),
           items: [for (final o in choices) DropdownMenuItem(value: o, child: Text(o, overflow: TextOverflow.ellipsis))],
@@ -258,7 +258,7 @@ class _RecordFormScreenState extends State<RecordFormScreen> {
         final linked = values[f.key] as String?;
         final valid = linkable.any((o) => o.id == linked) ? linked : null;
         return DropdownButtonFormField<String>(
-          value: valid,
+          initialValue: valid,
           isExpanded: true,
           decoration: InputDecoration(
             labelText: label,

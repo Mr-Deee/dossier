@@ -4,8 +4,28 @@
       "collectionGroup": "users",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "lifeCheck.enabled", "order": "ASCENDING" },
-        { "fieldPath": "lifeCheck.nextDue", "order": "ASCENDING" }
+        {
+          "fieldPath": "lifeCheck.enabled",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "lifeCheck.nextDue",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "invites",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "ownerUid",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "ASCENDING"
+        }
       ]
     }
   ],
@@ -14,7 +34,10 @@
       "collectionGroup": "grants",
       "fieldPath": "granteeUid",
       "indexes": [
-        { "order": "ASCENDING", "queryScope": "COLLECTION_GROUP" }
+        {
+          "order": "ASCENDING",
+          "queryScope": "COLLECTION_GROUP"
+        }
       ]
     },
     {

@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/services/push.dart';
 import '../../core/services/session.dart';
 import '../../core/services/vault_repository.dart';
 import '../theme.dart';
@@ -11,6 +12,8 @@ import 'documents.dart';
 import 'family.dart';
 import 'intelligence.dart';
 import 'legacy.dart';
+import 'life_check_question.dart';
+import 'notifications.dart';
 import 'life.dart';
 import 'settings.dart';
 import 'shared_with_me.dart';
@@ -26,6 +29,32 @@ class Shell extends StatefulWidget {
 
 class _ShellState extends State<Shell> {
   int _index = 0;
+  late final ServerAlertRelay _alerts = ServerAlertRelay(context.read<Session>().uid);
+
+  @override
+  void initState() {
+    super.initState();
+    _alerts.start();
+    Push.register(context.read<Session>().uid);
+    Push.pendingRoute.addListener(_openPending);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _openPending());
+  }
+
+  /// A notification was tapped (possibly before the vault was unlocked).
+  void _openPending() {
+    final route = Push.pendingRoute.value;
+    if (route == null || !mounted) return;
+    Push.pendingRoute.value = null;
+    setState(() => _index = 0);
+    openNotificationRoute(context, route);
+  }
+
+  @override
+  void dispose() {
+    Push.pendingRoute.removeListener(_openPending);
+    _alerts.stop();
+    super.dispose();
+  }
 
   static const _tabs = [
     (CupertinoIcons.house, CupertinoIcons.house_fill, 'Home'),

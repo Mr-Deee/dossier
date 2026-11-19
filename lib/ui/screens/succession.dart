@@ -5,7 +5,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../core/crypto/crypto_primitives.dart';
 import '../../core/crypto/key_manager.dart';
@@ -103,6 +102,20 @@ class SuccessionScreen extends StatelessWidget {
   }
 }
 
+/// Short intervals are for testing reminders; days are for real use.
+const _lifeCheckOptions = [
+  Duration(minutes: 5),
+  Duration(hours: 1),
+  Duration(hours: 3),
+  Duration(hours: 24),
+  Duration(days: 7),
+  Duration(days: 14),
+  Duration(days: 30),
+  Duration(days: 60),
+  Duration(days: 90),
+  Duration(days: 180),
+];
+
 class _LifeCheckSettings extends StatelessWidget {
   const _LifeCheckSettings();
   @override
@@ -110,7 +123,9 @@ class _LifeCheckSettings extends StatelessWidget {
     final s = context.watch<Session>();
     final lc = s.lifeCheck;
     final enabled = lc['enabled'] == true;
-    final interval = (lc['intervalDays'] as num?)?.toInt() ?? 30;
+    final interval = s.lifeCheckInterval;
+    final options = [..._lifeCheckOptions, if (!_lifeCheckOptions.contains(interval)) interval];
+    final short = interval < const Duration(days: 1);
     final paused = tsToDate(lc['pausedUntil']);
     return Card(
       child: Padding(
@@ -129,16 +144,33 @@ class _LifeCheckSettings extends StatelessWidget {
             Row(children: [
               const Text('Every'),
               const SizedBox(width: 12),
-              DropdownButton<int>(
-                value: [7, 14, 30, 60, 90, 180].contains(interval) ? interval : 30,
+              DropdownButton<Duration>(
+                value: interval,
                 items: [
-                  for (final d in [7, 14, 30, 60, 90, 180]) DropdownMenuItem(value: d, child: Text('$d days'))
+                  for (final d in options)
+                    DropdownMenuItem(
+                      value: d,
+                      child: Text(d < const Duration(days: 1) ? '${fmtInterval(d)} (test)' : fmtInterval(d)),
+                    )
                 ],
-                onChanged: (v) => runBusy(context, () => s.configureLifeCheck(intervalDays: v)),
+                onChanged: (v) => runBusy(context, () => s.configureLifeCheck(interval: v)),
               ),
             ]),
-            Text(
-                'Last check-in: ${fmtDate(tsToDate(lc['lastCheckIn']))} · Next due: ${fmtDate(tsToDate(lc['nextDue']))}'),
+            Builder(builder: (context) {
+              final f = short ? fmtDateTime : fmtDate;
+              final due = tsToDate(lc['nextDue']);
+              return Text('Last check-in: ${f(tsToDate(lc['lastCheckIn']))} · '
+                  'Next due: ${f(due)}${due == null ? '' : ' (${fmtUntil(due)})'}');
+            }),
+            if (short)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  'Test interval: your phone will remind you when the check-in is due. '
+                  'Switch back to days before real use.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: GlassColors.of(context).muted),
+                ),
+              ),
             if (paused != null && paused.isAfter(DateTime.now())) Text('Paused until ${fmtDate(paused)}'),
             const SizedBox(height: 10),
             Wrap(spacing: 8, children: [
@@ -320,16 +352,18 @@ class _ConfidantEditorState extends State<ConfidantEditor> {
     final entry = await runBusy(context, () => svc.lookup(_email.text), label: 'Looking up confidant…');
     if (!mounted) return;
     if (entry == null) {
+      final email = normaliseEmail(_email.text);
       final invite = await confirm(
         context,
         'Not on The Dossier yet',
-        '${_name.text} needs a Dossier account (with a verified email) before keys can be sealed to them. '
-            'Your confidant record is saved. Send them an invitation?',
-        ok: 'Invite',
+        '${_name.text} needs a Dossier account before their access can be sealed. Your confidant record is saved.\n\n'
+            'Email them an invitation at $email? Their email and your name are sent to our server to deliver it — '
+            'nothing from your vault is included. We\'ll notify you when they join.',
+        ok: 'Email invitation',
       );
-      if (invite) {
-        await Share.share('I\'d like to name you as a trusted confidant in The Dossier. Please install the app and '
-            'create an account with ${normaliseEmail(_email.text)}, then let me know.');
+      if (invite && mounted) {
+        await runBusy(context, () => svc.inviteConfidant(name: _name.text, email: email),
+            label: 'Sending invitation…', success: 'Invitation sent to $email');
       }
       if (mounted) Navigator.pop(context);
       return;
@@ -399,7 +433,7 @@ class _ConfidantEditorState extends State<ConfidantEditor> {
           ),
           const SizedBox(height: 14),
           DropdownButtonFormField<String>(
-            value: _relationship,
+            initialValue: _relationship,
             decoration: const InputDecoration(labelText: 'Relationship *'),
             items: [for (final r in relationships) DropdownMenuItem(value: r, child: Text(r))],
             onChanged: (v) => setState(() => _relationship = v),

@@ -74,6 +74,15 @@ void main() {
       expect(deliverySummary(w), '1 week after release');
     });
 
+    test('hours after release, for quick tests', () {
+      for (final h in [1, 3, 24]) {
+        final m = msg({'deliveryMode': deliverAfterDelay, 'delayAmount': h.toDouble(), 'delayUnit': 'Hours'});
+        expect(messageOpensAt(m, releasedAt: released), released.add(Duration(hours: h)));
+      }
+      final one = msg({'deliveryMode': deliverAfterDelay, 'delayAmount': 1.0, 'delayUnit': 'Hours'});
+      expect(deliverySummary(one), '1 hour after release');
+    });
+
     test('on a specific date', () {
       final m = msg({'deliveryMode': deliverOnDate, 'deliverOn': '2034-03-14'});
       expect(messageOpensAt(m, releasedAt: released), DateTime(2034, 3, 14));

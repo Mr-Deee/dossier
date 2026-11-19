@@ -17,6 +17,7 @@ class Refs {
   static CollectionReference<Map<String, dynamic>> notifications(String uid) => user(uid).collection('notifications');
   static DocumentReference<Map<String, dynamic>> directory(String emailHash) => db.collection('directory').doc(emailHash);
   static CollectionReference<Map<String, dynamic>> get nominations => db.collection('nominations');
+  static CollectionReference<Map<String, dynamic>> get invites => db.collection('invites');
   static CollectionReference<Map<String, dynamic>> get accessRequests => db.collection('accessRequests');
 
   static String filePath(String uid, String category, String fileId) => 'users/$uid/files/$category/$fileId.bin';

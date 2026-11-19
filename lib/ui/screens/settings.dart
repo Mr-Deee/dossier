@@ -1,5 +1,5 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +13,7 @@ import '../../core/services/session.dart';
 import '../../core/services/vault_repository.dart';
 import '../theme.dart';
 import 'onboarding.dart';
+import '../../core/services/local_notifications.dart';
 import '../widgets/common.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -52,6 +53,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SectionHeader('Appearance'),
         Card(
           child: Column(children: [
+            ListTile(
+              leading: const Icon(Icons.notifications_active_outlined),
+              title: const Text('Test notifications'),
+              subtitle: const Text('Check that message notifications reach this phone'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => _testNotifications(context),
+            ),
             ListTile(
               leading: const Icon(Icons.auto_awesome_outlined),
               title: const Text('Replay introduction'),
@@ -254,5 +262,57 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return true;
     }, label: 'Deleting…');
     if (done == true && context.mounted) Navigator.popUntil(context, (r) => r.isFirst);
+  }
+}
+
+
+Future<void> _testNotifications(BuildContext context) async {
+  final granted = await LocalNotifications.requestPermission();
+  if (!context.mounted) return;
+  if (!granted) {
+    toast(
+        context,
+        kIsWeb
+            ? 'Chrome is blocking notifications. Click the icon left of the address bar → Notifications → Allow, then try again.'
+            : 'Notifications are turned off for The Dossier. Allow them in your phone settings.',
+        error: true);
+    return;
+  }
+  final delay = await showModalBottomSheet<Duration>(
+    context: context,
+    showDragHandle: true,
+    builder: (c) => SafeArea(
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        const Padding(
+          padding: EdgeInsets.fromLTRB(24, 0, 24, 8),
+          child: Text('Send a test notification in…'),
+        ),
+        for (final (label, d) in const [
+          ('Right now', Duration.zero),
+          ('1 minute', Duration(minutes: 1)),
+          ('1 hour', Duration(hours: 1)),
+          ('3 hours', Duration(hours: 3)),
+          ('24 hours', Duration(hours: 24)),
+        ])
+          ListTile(title: Text(label), onTap: () => Navigator.pop(c, d)),
+        const SizedBox(height: 8),
+      ]),
+    ),
+  );
+  if (delay == null) return;
+  if (delay == Duration.zero) {
+    await LocalNotifications.showNow(
+        key: 'test-now', title: 'Test notification', body: 'Notifications from The Dossier are working.');
+  } else {
+    await LocalNotifications.scheduleTest(delay);
+  }
+  if (context.mounted) {
+    toast(
+        context,
+        delay == Duration.zero
+            ? 'Sent.'
+            : kIsWeb
+                ? 'Scheduled. Keep this browser tab open — browsers can only deliver it while the tab is open.'
+                : 'Scheduled. You can close the app — it will still arrive.');
   }
 }

@@ -8,6 +8,26 @@ import '../theme.dart';
 
 String fmtDate(DateTime? d) => d == null ? '—' : DateFormat.yMMMd().format(d);
 
+String fmtDateTime(DateTime? d) => d == null ? '—' : DateFormat.yMMMd().add_jm().format(d);
+
+/// "5 minutes", "3 hours", "30 days".
+String fmtInterval(Duration d) {
+  String n(int v, String u) => '$v $u${v == 1 ? '' : 's'}';
+  if (d.inMinutes < 60) return n(d.inMinutes, 'minute');
+  if (d.inHours < 24 || d.inHours % 24 != 0) return n(d.inHours, 'hour');
+  return n(d.inDays, 'day');
+}
+
+/// "in 4 min", "in 3 h", "in 12 days", or "overdue".
+String fmtUntil(DateTime when) {
+  final d = when.difference(DateTime.now());
+  if (d.isNegative) return 'overdue';
+  if (d.inMinutes < 1) return 'in under a minute';
+  if (d.inMinutes < 60) return 'in ${d.inMinutes} min';
+  if (d.inHours < 24) return 'in ${d.inHours} h';
+  return d.inDays == 1 ? 'tomorrow' : 'in ${d.inDays} days';
+}
+
 String fmtDateStr(String? iso) => fmtDate(iso == null ? null : DateTime.tryParse(iso));
 
 String fmtBytes(num bytes) {

@@ -7,7 +7,10 @@ import 'package:firebase_storage/firebase_storage.dart';
 import '../crypto/crypto_primitives.dart';
 import '../crypto/key_manager.dart';
 import '../models/record.dart';
+import '../logic/analysis.dart';
+import '../schema/record_types.dart';
 import 'firebase_refs.dart';
+import 'local_notifications.dart';
 import 'session.dart';
 import 'vault_repository.dart';
 
@@ -71,6 +74,27 @@ class SuccessionService {
     final d = snap.data();
     if (d == null) return null;
     return DirectoryEntry(d['uid'] as String, unb64(d['publicKey'] as String));
+  }
+
+  /// Emails an invitation to a confidant who has no Dossier account yet.
+  /// Their email and your name go to the server so it can send the email;
+  /// nothing from your vault is included. Inviting again replaces the old one.
+  Future<void> inviteConfidant({required String name, required String email}) async {
+    final normalised = normaliseEmail(email);
+    final hash = await sha256Hex(normalised);
+    final ref = Refs.invites.doc('${_uid}_$hash');
+    if ((await ref.get()).exists) await ref.delete();
+    String clip(String v) => v.trim().length > 80 ? v.trim().substring(0, 80) : v.trim();
+    await ref.set({
+      'ownerUid': _uid,
+      'email': normalised,
+      'emailHash': hash,
+      'inviteeName': clip(name),
+      'ownerName': clip(repo.displayName),
+      'status': 'pending',
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+    await repo.logAudit('invite.create');
   }
 
   Stream<List<Grant>> myGrants() => Refs.grants(_uid)
@@ -165,6 +189,37 @@ class SuccessionService {
     }
   }
 
+  // ---- Life Check questions ("is the owner around?") -------------------------
+
+  Stream<List<QueryDocumentSnapshot<Map<String, dynamic>>>> lifeCheckQuestionsForMe() => Refs.db
+      .collection('lifeChecks')
+      .where('granteeUid', isEqualTo: _uid)
+      .where('status', isEqualTo: 'open')
+      .snapshots()
+      .map((s) => s.docs);
+
+  /// Loads a question with the owner's name (decrypted from the nomination
+  /// when possible) and the nomination, if this person was fully added.
+  Future<LifeCheckQuestion?> lifeCheckQuestion(String id) async {
+    final snap = await Refs.db.collection('lifeChecks').doc(id).get();
+    final q = snap.data();
+    if (q == null) return null;
+    final ownerUid = q['ownerUid'] as String;
+    final nom = (await Refs.nominations.doc('${ownerUid}_$_uid').get()).data();
+    final name = nom != null ? await openOwnerName(nom) : (q['ownerName'] as String? ?? '');
+    return LifeCheckQuestion(
+      id: id,
+      ownerUid: ownerUid,
+      ownerName: name.isEmpty ? 'Someone you know' : name,
+      open: q['status'] == 'open',
+      triggers: nom == null ? null : List<String>.from(nom['triggers'] as List? ?? const []),
+    );
+  }
+
+  Future<void> answerLifeCheck(String id, {required bool alive}) async {
+    await Refs.functions.httpsCallable('answerLifeCheck').call({'id': id, 'answer': alive ? 'alive' : 'not_alive'});
+  }
+
   Stream<List<QueryDocumentSnapshot<Map<String, dynamic>>>> myRequests() => Refs.accessRequests
       .where('requesterUid', isEqualTo: _uid)
       .snapshots()
@@ -224,7 +279,24 @@ class SuccessionService {
       }
     }
     await repo.logAudit('released.view', ownerUid: ownerUid);
+    await _scheduleMessageNotifications(ownerUid, ownerName, grant, records);
     return SharedDossier(ownerUid: ownerUid, ownerName: ownerName, grant: grant, records: records);
+  }
+
+  /// Schedules a phone notification for each released message that opens later.
+  Future<void> _scheduleMessageNotifications(
+      String ownerUid, String ownerName, Grant grant, List<DossierRecord> records) async {
+    final releasedAt = tsToDate(grant.data['releasedAt']);
+    var asked = false;
+    for (final m in records.where((r) => r.kind == Kinds.legacyMessage)) {
+      final opens = messageOpensAt(m, releasedAt: releasedAt);
+      if (opens == null || !opens.isAfter(DateTime.now())) continue;
+      if (!asked) {
+        asked = true;
+        await LocalNotifications.requestPermission();
+      }
+      await LocalNotifications.scheduleMessageOpening(key: '$ownerUid/${m.id}', fromName: ownerName, opensAt: opens);
+    }
   }
 
   // ---- Verification team --------------------------------------------------------
@@ -262,4 +334,16 @@ class SuccessionService {
     if (n.endsWith('.jpg') || n.endsWith('.jpeg')) return 'image/jpeg';
     return 'application/octet-stream';
   }
+}
+
+class LifeCheckQuestion {
+  LifeCheckQuestion({required this.id, required this.ownerUid, required this.ownerName, required this.open, this.triggers});
+  final String id;
+  final String ownerUid;
+  final String ownerName;
+  final bool open;
+
+  /// Release triggers from the nomination; null when the owner never finished
+  /// adding this person (they cannot request release).
+  final List<String>? triggers;
 }

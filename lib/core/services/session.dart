@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -10,6 +9,8 @@ import '../crypto/crypto_primitives.dart';
 import '../crypto/key_manager.dart';
 import 'device_unlock.dart';
 import 'firebase_refs.dart';
+import 'local_notifications.dart';
+import 'push.dart';
 
 enum SessionState { loading, signedOut, needsSetup, locked, unlocked }
 
@@ -109,6 +110,7 @@ class Session extends ChangeNotifier with WidgetsBindingObserver {
       FirebaseAuth.instance.sendPasswordResetEmail(email: normaliseEmail(email));
 
   Future<void> signOut() async {
+    if (user != null) await Push.unregister(uid);
     _wipeKeys();
     await FirebaseAuth.instance.signOut();
   }
@@ -234,43 +236,68 @@ class Session extends ChangeNotifier with WidgetsBindingObserver {
 
   // ---- Life Check -------------------------------------------------------------
 
+  /// How often the user must check in. Stored in minutes so short test
+  /// intervals work; older vaults only have `intervalDays`.
+  Duration get lifeCheckInterval {
+    final mins = (lifeCheck['intervalMinutes'] as num?)?.toInt();
+    if (mins != null && mins > 0) return Duration(minutes: mins);
+    return Duration(days: (lifeCheck['intervalDays'] as num?)?.toInt() ?? 30);
+  }
+
   Future<void> checkIn() async {
     final now = DateTime.now();
-    final days = (lifeCheck['intervalDays'] as num?)?.toInt() ?? 30;
     final lc = {
       ...lifeCheck,
       'lastCheckIn': Timestamp.fromDate(now),
-      'nextDue': Timestamp.fromDate(now.add(Duration(days: days))),
+      'nextDue': Timestamp.fromDate(now.add(lifeCheckInterval)),
       'missed': 0,
       'pausedUntil': null,
     };
     await Refs.user(uid).set({'lifeCheck': lc}, SetOptions(merge: true));
     userDoc['lifeCheck'] = lc;
     notifyListeners();
+    await _syncLifeCheckReminder();
   }
 
-  Future<void> configureLifeCheck({bool? enabled, int? intervalDays, DateTime? pausedUntil, bool clearPause = false}) async {
+  Future<void> configureLifeCheck({bool? enabled, Duration? interval, DateTime? pausedUntil, bool clearPause = false}) async {
     final lc = {...lifeCheck};
     if (enabled != null) lc['enabled'] = enabled;
-    if (intervalDays != null) {
-      lc['intervalDays'] = intervalDays;
+    if (interval != null) {
+      lc['intervalMinutes'] = interval.inMinutes;
+      // Kept for older app versions; at least 1 so they never divide by zero.
+      lc['intervalDays'] = interval.inDays < 1 ? 1 : interval.inDays;
       final last = tsToDate(lc['lastCheckIn']) ?? DateTime.now();
-      lc['nextDue'] = Timestamp.fromDate(last.add(Duration(days: intervalDays)));
+      lc['nextDue'] = Timestamp.fromDate(last.add(interval));
     }
     if (pausedUntil != null) lc['pausedUntil'] = Timestamp.fromDate(pausedUntil);
     if (clearPause) lc['pausedUntil'] = null;
     await Refs.user(uid).set({'lifeCheck': lc}, SetOptions(merge: true));
     userDoc['lifeCheck'] = lc;
     notifyListeners();
+    await _syncLifeCheckReminder();
+  }
+
+  /// Schedules (or cancels) the on-device "check in" reminder for nextDue.
+  Future<void> _syncLifeCheckReminder() async {
+    final lc = lifeCheck;
+    final due = tsToDate(lc['nextDue']);
+    final paused = tsToDate(lc['pausedUntil']);
+    final active = lc['enabled'] == true && due != null && (paused == null || paused.isBefore(due));
+    if (!active) {
+      await LocalNotifications.cancelLifeCheck(uid);
+      return;
+    }
+    await LocalNotifications.requestPermission();
+    await LocalNotifications.scheduleLifeCheck(uid, due);
   }
 
   // ---- Auto-lock --------------------------------------------------------------
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState s) {
-    if (s == AppLifecycleState.paused || s == AppLifecycleState.hidden) {
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.hidden) {
       _pausedAt ??= DateTime.now();
-    } else if (s == AppLifecycleState.resumed) {
+    } else if (state == AppLifecycleState.resumed) {
       final p = _pausedAt;
       _pausedAt = null;
       if (p != null && isUnlocked && DateTime.now().difference(p).inMinutes >= autoLockMinutes) {

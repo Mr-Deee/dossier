@@ -15,6 +15,8 @@ import '../widgets/record_form.dart';
 import 'documents.dart';
 import 'intelligence.dart';
 import 'legacy.dart';
+import 'life_check_question.dart';
+import 'notifications.dart';
 import 'records.dart';
 import 'succession.dart';
 
@@ -97,7 +99,7 @@ class DashboardScreen extends StatelessWidget {
                   Text(_greeting(), style: theme.textTheme.bodySmall?.copyWith(color: g.muted)),
                 ]),
               ),
-              GlassIconButton(icon: CupertinoIcons.line_horizontal_3, tooltip: 'Menu', onPressed: () => shellScaffoldKey.currentState?.openDrawer()),
+              const NotificationBell(),
               const SizedBox(width: 10),
               GlassIconButton(icon: CupertinoIcons.lock, tooltip: 'Lock', onPressed: s.lock, badge: rem.isNotEmpty),
             ]),
@@ -106,6 +108,7 @@ class DashboardScreen extends StatelessWidget {
             const SizedBox(height: 6),
             Text(DateFormat.yMMMMEEEEd().format(DateTime.now()), style: theme.textTheme.bodyMedium?.copyWith(color: g.muted)),
             const SizedBox(height: 22),
+            const LifeCheckQuestionBanner(),
             const _LifeCheckCard(),
             if (repo.undecryptable.isNotEmpty) ...[
               InfoBanner('${repo.undecryptable.length} record(s) could not be decrypted and are hidden.',
@@ -461,6 +464,7 @@ class _LifeCheckCard extends StatelessWidget {
     if (due == null) return const SizedBox.shrink();
     final days = due.difference(DateTime.now()).inDays;
     if (days > 7) return const SizedBox.shrink();
+    final until = fmtUntil(due);
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Glass(
@@ -472,7 +476,7 @@ class _LifeCheckCard extends StatelessWidget {
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('Life Check', style: Theme.of(context).textTheme.titleSmall),
-              Text(days < 0 ? 'Overdue — let us know you\'re OK' : 'Due ${days == 0 ? 'today' : 'in $days days'}',
+              Text(until == 'overdue' ? 'Overdue — let us know you\'re OK' : 'Due $until',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(color: GlassColors.of(context).muted)),
             ]),
           ),

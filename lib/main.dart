@@ -1,9 +1,10 @@
-import 'package:cryptography_flutter/cryptography_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'core/services/local_notifications.dart';
+import 'core/services/push.dart';
 import 'core/services/session.dart';
 import 'core/services/succession_service.dart';
 import 'core/services/vault_repository.dart';
@@ -17,10 +18,10 @@ import 'ui/widgets/file_actions.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Use platform-native AES-GCM where available (falls back to pure Dart).
-  FlutterCryptography.enable();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await purgeDecryptedTemp();
+  await LocalNotifications.init();
+  await Push.listenForTaps();
   final prefs = await SharedPreferences.getInstance();
   final onboarded = prefs.getBool(_onboardedKey) ?? false;
 

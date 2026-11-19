@@ -128,7 +128,7 @@ const deliverOnRelease = 'As soon as access is released';
 const deliverAfterDelay = 'A set time after release';
 const deliverOnDate = 'On a specific date';
 const deliveryModes = [deliverOnRelease, deliverAfterDelay, deliverOnDate];
-const delayUnits = ['Days', 'Weeks', 'Months', 'Years'];
+const delayUnits = ['Hours', 'Days', 'Weeks', 'Months', 'Years'];
 
 // ---- Paying in installments (land, cars, etc.) ----
 const paymentFullyPaid = 'Fully paid';

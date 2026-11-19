@@ -84,6 +84,15 @@ service cloud.firestore {
         allow update, delete: if false;
       }
 
+      // Push-notification tokens for this user's devices.
+      match /devices/{token} {
+        allow read, delete: if isUser(uid);
+        allow create, update: if isUser(uid)
+          && request.resource.data.keys().hasOnly(['token', 'platform', 'updatedAt'])
+          && request.resource.data.token == token
+          && request.resource.data.updatedAt == request.time;
+      }
+
       // Written by Cloud Functions only.
       match /notifications/{id} {
         allow read, delete: if isUser(uid);
@@ -147,6 +156,36 @@ service cloud.firestore {
             && request.resource.data.status == 'cancelled'
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'decidedAt'])));
       allow delete: if false;
+    }
+
+    // ------------------------------------------------------------- invites
+    // Email invitation for a confidant who has no account yet. The email is
+    // stored in plain text so the server can send the invitation; nothing
+    // else about the vault is included.
+    match /invites/{id} {
+      allow read, delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
+      allow create: if verified()
+        && request.resource.data.keys().hasOnly(['ownerUid', 'email', 'emailHash', 'inviteeName', 'ownerName', 'status', 'createdAt'])
+        && request.resource.data.ownerUid == request.auth.uid
+        && id == request.auth.uid + '_' + request.resource.data.emailHash
+        && request.resource.data.email is string
+        && request.resource.data.email.size() < 320
+        && request.resource.data.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
+        && request.resource.data.emailHash == hashing.sha256(request.resource.data.email.lower()).toHexString().lower()
+        && request.resource.data.inviteeName is string && request.resource.data.inviteeName.size() <= 80
+        && request.resource.data.ownerName is string && request.resource.data.ownerName.size() <= 80
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt == request.time;
+      allow update: if false;
+    }
+
+    // ---------------------------------------------------------- life checks
+    // "Is the owner around?" questions to confidants. Written and answered
+    // through Cloud Functions only.
+    match /lifeChecks/{id} {
+      allow get: if signedIn() && resource.data.granteeUid == request.auth.uid;
+      allow list: if signedIn() && resource.data.granteeUid == request.auth.uid;
+      allow write: if false;
     }
 
     // Trigger Email extension queue (optional). Server-only.

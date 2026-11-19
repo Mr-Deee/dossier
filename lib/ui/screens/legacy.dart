@@ -78,6 +78,7 @@ class WillBuilderScreen extends StatelessWidget {
     for (final old in repo.ofKind(Kinds.willVersion).where((v) => v.str('status') == 'Draft')) {
       await repo.save(Kinds.willVersion, {...old.data, 'status': 'Superseded'}, id: old.id);
     }
+    if (!context.mounted) return;
     final rec = await runBusy(context, () => repo.save(Kinds.willVersion, {
           'label': 'Draft v$version',
           'status': 'Draft',
@@ -176,10 +177,11 @@ class WillBuilderScreen extends StatelessWidget {
                 backgroundColor: color.withValues(alpha: 0.12),
               ),
             ),
-            if (over) Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Text('Allocations exceed 100%', style: TextStyle(color: Brand.danger, fontSize: 12)),
-            ),
+            if (over)
+              const Padding(
+                padding: EdgeInsets.only(top: 6),
+                child: Text('Allocations exceed 100%', style: TextStyle(color: Brand.danger, fontSize: 12)),
+              ),
             for (final x in mine)
               ListTile(
                 dense: true,

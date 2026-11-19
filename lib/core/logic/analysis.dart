@@ -108,6 +108,7 @@ DateTime? messageOpensAt(DossierRecord r, {DateTime? releasedAt}) {
       if (n <= 0) return null;
       final from = releasedAt ?? DateTime.now();
       return switch (r.str('delayUnit')) {
+        'Hours' => from.add(Duration(hours: n)),
         'Days' => from.add(Duration(days: n)),
         'Weeks' => from.add(Duration(days: 7 * n)),
         'Years' => DateTime(from.year + n, from.month, from.day, from.hour, from.minute),

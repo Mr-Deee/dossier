@@ -72,7 +72,7 @@ class _RecordListScreenState extends State<RecordListScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => RecordFormScreen.open(context, widget.kind),
         icon: const Icon(Icons.add),
-        label: Text('Add'),
+        label: const Text('Add'),
         backgroundColor: Brand.gold,
         foregroundColor: Brand.navy,
       ),
